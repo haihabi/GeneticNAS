@@ -1,7 +1,7 @@
 import numpy as np
 from enum import Enum
 from gnas.common.bit_utils import vector_bits2int
-from gnas.models.operation_modules import get_module
+from gnas.modules.operation_modules import get_module
 
 
 def is_size_power_of_two(input_list: list):
@@ -11,29 +11,21 @@ def is_size_power_of_two(input_list: list):
     return not (n != 1 and n_gal != n)
 
 
-class SpaceType(Enum):
-    RNN = 0
-    CNN = 1
-
-
 class AlignmentConfig(object):
-    def __init__(self, alignment_operator: str, in_channels: int, out_channels: int):
+    def __init__(self, alignment_operator: str):
         self.alignment_operator = alignment_operator
-        self.in_channels = in_channels
-        self.out_channels = out_channels
 
-    def get_weight_modules(self):
-        return get_module(self.alignment_operator)(self.in_channels, self.out_channels)
+    def get_weight_modules(self, in_channels, out_channels):
+        return get_module(self.alignment_operator)(in_channels, out_channels)
 
 
 class OperationConfig(object):
-    def __init__(self, n_channels: int, non_linear_list: list, weight_op_list: list, merge_op_list: list):
+    def __init__(self, non_linear_list: list, weight_op_list: list, merge_op_list: list):
         weight_op_list = ['NC', *weight_op_list]
         if not is_size_power_of_two(non_linear_list): raise Exception('Non Linear list is not power of two')
         if not is_size_power_of_two(weight_op_list): raise Exception('Weight Operation list is not power of two')
         if not is_size_power_of_two(merge_op_list): raise Exception(
             'Merge Operation list is not power of two')
-        self.n_channels = n_channels
         self.non_linear_list = non_linear_list
         self.weight_op_list = weight_op_list
         self.merge_op_list = merge_op_list
@@ -48,8 +40,8 @@ class OperationConfig(object):
     def get_merge_op_modules(self):
         return [get_module(mo)() for mo in self.merge_op_list]
 
-    def get_weight_modules(self, max_inputs):
-        return [[get_module(wo)(self.n_channels, self.n_channels) for wo in self.weight_op_list] for _ in
+    def get_weight_modules(self, max_inputs, n_channels):
+        return [[get_module(wo)(n_channels, n_channels) for wo in self.weight_op_list] for _ in
                 range(max_inputs)]
 
     def calculate_operation_bits(self):
@@ -88,15 +80,3 @@ class OperationConfig(object):
             index = vector_bits2int(operation_vector[:n_bits])
 
         return index, operation_vector[n_bits:]
-
-
-__rnn_operation_space_dict__ = {'ENAS': OperationConfig(128, ['Tanh', 'Sigmoid'], ['Linear'], ['Add'])}
-
-
-def get_operation_config(operation_space: str, space_type: SpaceType) -> OperationConfig:
-    if space_type == SpaceType.RNN:
-        oc = __rnn_operation_space_dict__.get(operation_space)
-        if oc is None: raise Exception('Unkown operation config type')
-        return oc
-    else:
-        raise NotImplemented

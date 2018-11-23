@@ -1,11 +1,10 @@
 import unittest
-import numpy as np
-from gnas.search_space.space_config import OperationConfig, SpaceType
+from gnas.search_space.space_config import OperationConfig
 
 
 class TestSpaceConfig(unittest.TestCase):
     def test_operation_config(self):
-        oc = OperationConfig(128, [0, 1, 2, 3], [0], [0])
+        oc = OperationConfig([0, 1, 2, 3], [0], [0])
         self.assertTrue(oc.mo_bits == 0)
         self.assertTrue(oc.nl_bits == 2)
         self.assertTrue(oc.wo_bits == 1)

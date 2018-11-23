@@ -1,29 +1,27 @@
 import torch
 import torch.nn as nn
-from gnas.search_space.space_config import OperationConfig
+from gnas.modules.operation_modules import get_module
 
 
 class NodeModule(nn.Module):
-    def __init__(self, max_inputs: int, oc: OperationConfig):
+    def __init__(self, max_inputs: int, n_channels: int, operation_config):
         super(NodeModule, self).__init__()
         self.max_inputs = max_inputs
-        self.oc = oc
+        self.oc = operation_config
+        self.n_channels = n_channels
+        self.nl_module = self.oc.get_non_linear_modules()
+        self.merge_module = self.oc.get_merge_op_modules()
+        self.weight_modules = self.oc.get_weight_modules(max_inputs, n_channels)
+        [[self.add_module(str(i) + str(j), op) for j, op in enumerate(input_w)] for i, input_w in
+         enumerate(self.weight_modules)]
 
-        self._build_operators()
         self.weight = None
         self.merge = None
         self.non_linear = None
 
-    def _build_operators(self):
-        self.nl_module = self.oc.get_non_linear_modules()
-        self.merge_module = self.oc.get_merge_op_modules()
-        self.weight_modules = self.oc.get_weight_modules(self.max_inputs)
-
     def forward(self, inputs):
         x = [w(i) for i, w in zip(inputs, self.weight)]
         x = self.merge(x)
-        if isinstance(x, int):
-            print("a")
         return self.non_linear(x)
 
     def set_current_node_config(self, node_config):
