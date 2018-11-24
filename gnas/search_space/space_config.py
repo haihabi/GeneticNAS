@@ -15,9 +15,6 @@ class AlignmentConfig(object):
     def __init__(self, alignment_operator: str):
         self.alignment_operator = alignment_operator
 
-    def get_weight_modules(self, in_channels, out_channels):
-        return get_module(self.alignment_operator)(in_channels, out_channels)
-
 
 class OperationConfig(object):
     def __init__(self, non_linear_list: list, weight_op_list: list, merge_op_list: list):
@@ -29,7 +26,10 @@ class OperationConfig(object):
         self.non_linear_list = non_linear_list
         self.weight_op_list = weight_op_list
         self.merge_op_list = merge_op_list
-
+        self.linear_mode = False
+        if len(self.weight_op_list) == 2 and len(self.merge_op_list) == 1 and self.weight_op_list[1] == 'Linear' and \
+                self.merge_op_list[0] == 'Add':
+            self.linear_mode = True
         self.nl_bits = np.floor(np.log2(len(non_linear_list))).astype('int')
         self.wo_bits = np.floor(np.log2(len(weight_op_list))).astype('int')  # the plus one
         self.mo_bits = np.floor(np.log2(len(merge_op_list))).astype('int')
@@ -43,6 +43,9 @@ class OperationConfig(object):
     def get_weight_modules(self, max_inputs, n_channels):
         return [[get_module(wo)(n_channels, n_channels) for wo in self.weight_op_list] for _ in
                 range(max_inputs)]
+
+    def is_linear_mode(self):
+        return self.linear_mode
 
     def calculate_operation_bits(self):
         return self.nl_bits + self.mo_bits

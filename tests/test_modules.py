@@ -1,11 +1,10 @@
 import unittest
 import torch
-import numpy as np
+import gnas
+import time
 from gnas.search_space.space_config import OperationConfig, AlignmentConfig
 from gnas.search_space.search_space import SearchSpace
 from gnas.modules.sub_graph_module import SubGraphModule
-import gnas
-import time
 
 
 class TestModules(unittest.TestCase):
@@ -42,7 +41,7 @@ class TestModules(unittest.TestCase):
         time_steps = 35
         input = torch.randn(batch_size, time_steps, in_channels, dtype=torch.float)
 
-        ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=20, n_outputs=1)
+        ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
         rnn = gnas.modules.RnnSearchModule(in_channels=in_channels, n_channels=out_channels, working_device='cpu',
                                            ss=ss)
         rnn.set_individual(ss.generate_individual())
