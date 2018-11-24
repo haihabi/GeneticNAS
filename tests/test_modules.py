@@ -39,7 +39,7 @@ class TestModules(unittest.TestCase):
         in_channels = 300
         out_channels = 128
         time_steps = 35
-        input = torch.randn(batch_size, time_steps, in_channels, dtype=torch.float)
+        input = torch.randn(time_steps, batch_size, in_channels, dtype=torch.float)
 
         ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
         rnn = gnas.modules.RnnSearchModule(in_channels=in_channels, n_channels=out_channels, working_device='cpu',
@@ -48,10 +48,10 @@ class TestModules(unittest.TestCase):
 
         state = rnn.init_state(batch_size)
         s = time.time()
-        output = rnn(input, state)
+        output, state = rnn(input, state)
         print(time.time() - s)
-        self.assertTrue(output.shape[0] == batch_size)
-        self.assertTrue(output.shape[1] == time_steps)
+        self.assertTrue(output.shape[1] == batch_size)
+        self.assertTrue(output.shape[0] == time_steps)
         self.assertTrue(output.shape[2] == out_channels)
 
 
