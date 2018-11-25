@@ -4,6 +4,7 @@ from random import choices
 from gnas.genetic_algorithm.genetic import GeneticAlgorithms
 from gnas.genetic_algorithm.mutation import flip_bit
 from gnas.genetic_algorithm.cross_over import uniform_crossover
+import gnas
 
 
 class TestGenetic(unittest.TestCase):
@@ -39,6 +40,10 @@ class TestGenetic(unittest.TestCase):
             else:
                 self.assertTrue(np.sum(np.abs(ga.population - population)) == 0)
             ga.update_current_individual_fitness(objective_function(indvudal))
+
+    def test_search_space(self):
+        ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
+        gnas.genetic_algorithm_searcher(ss, population_size=20)
 
 
 if __name__ == '__main__':
