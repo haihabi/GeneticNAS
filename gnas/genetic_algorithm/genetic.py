@@ -1,22 +1,28 @@
 import numpy as np
 from random import choices
 from gnas.search_space.search_space import SearchSpace
+from gnas.search_space.cross_over import individual_uniform_crossover
+from gnas.search_space.mutation import individual_flip_mutation
 
 
-def genetic_algorithm_searcher(search_space, population_size=10, n_generation=15, elitism=True):
-    def population_initializer():
-        return np.round(np.random.rand(20, 4))
+def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, n_generation=15, elitism=True):
+    def population_initializer(p_size):
+        return search_space.generate_population(p_size)
 
     def mutation_function(x):
-        return flip_bit(x, 1 / n)
+        return individual_flip_mutation(x, 1 / 50)
 
     def cross_over_function(x0, x1):
-        return uniform_crossover(x0, x1)
+        return individual_uniform_crossover(x0, x1)
 
     def selection_function(p):
         couples = choices(population=list(range(population_size)), weights=p,
                           k=2 * population_size)
         return np.reshape(np.asarray(couples), [-1, 2])
+
+    return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
+                             min_objective=True, n_generation=n_generation, population_size=population_size,
+                             elitism=elitism)
 
 
 class GeneticAlgorithms(object):
@@ -51,8 +57,8 @@ class GeneticAlgorithms(object):
             raise StopIteration
 
     def _init_population(self):
-        self.population = self.population_initializer()
-        self.population_fitness = np.nan * np.ones(20)
+        self.population = self.population_initializer(self.population_size)
+        self.population_fitness = np.nan * np.ones(self.population_size)
 
     def _update_population(self):
         print("Update population")
@@ -66,9 +72,9 @@ class GeneticAlgorithms(object):
         couples = self.selection_function(p)  # selection
         child = [self.cross_over_function(self.population[c[0]], self.population[c[1]]) for c in couples]  # cross-over
         self.population = np.asarray([self.mutation_function(c) for c in child])  # mutation
-        self.population_fitness = np.nan * np.ones(20)  # clear fitness results
+        self.population_fitness = np.nan * np.ones(self.population_size)  # clear fitness results
         if self.elitism:
-            best_index = np.random.random_integers(0, self.population_size)
+            best_index = np.random.random_integers(0, self.population_size - 1)
             self.population[best_index] = best_individual
         # update generation index and individual index
         self.i = 0

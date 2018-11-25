@@ -43,7 +43,9 @@ class TestGenetic(unittest.TestCase):
 
     def test_search_space(self):
         ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
-        gnas.genetic_algorithm_searcher(ss, population_size=20)
+        ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
+        for i in ga:
+            ga.update_current_individual_fitness(0 + np.random.rand(1))
 
 
 if __name__ == '__main__':
