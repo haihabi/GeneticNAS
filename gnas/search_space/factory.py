@@ -1,12 +1,11 @@
+import numpy as np
 from gnas.search_space.search_space import SearchSpace
-from gnas.search_space.space_config import OperationConfig, AlignmentConfig
-
-__operation_config_dict__ = {'ENAS-RNN': OperationConfig(['Tanh', 'ReLU', 'ReLU6', 'Sigmoid'], ['Linear'], ['Add'])}
+from gnas.search_space.operation_space import RnnInputNodeConfig, RnnNodeConfig
 
 
-def get_search_space(alignment_operator: str, operation_space: str, n_inputs: int, n_nodes: int,
-                     n_outputs: int) -> SearchSpace:
-    ac = AlignmentConfig(alignment_operator)
-    oc = __operation_config_dict__.get(operation_space)
-    if oc is None: raise Exception('Unkown operation config type')
-    return SearchSpace(ac, oc, n_inputs, n_nodes, n_outputs)
+def get_enas_rnn_search_space(x_size, recurrent_size, n_nodes) -> SearchSpace:
+    nll = ['Tanh', 'ReLU', 'ReLU6', 'Sigmoid']
+    node_config_list = [RnnInputNodeConfig(2, [0, 1], x_size, recurrent_size, nll)]
+    for i in range(n_nodes):
+        node_config_list.append(RnnNodeConfig(3 + i, np.linspace(2, 2 + i, 1 + i).astype('int'), recurrent_size, nll))
+    return SearchSpace(node_config_list)

@@ -43,18 +43,18 @@ class GeneticAlgorithms(object):
         self.min_objective = min_objective
         self._init_population()
 
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.g_index < self.n_generation:
-            if (self.i % self.population_size) == 0 and self.i != 0:
-                self._update_population()
-            current_individuals = self.population[self.i % self.population_size]
-            self.i += 1
-            return current_individuals
-        else:  # finished all generations
-            raise StopIteration
+    # def __iter__(self):
+    #     return self
+    #
+    # def __next__(self):
+    #     if self.g_index < self.n_generation:
+    #         if (self.i % self.population_size) == 0 and self.i != 0:
+    #             self._update_population()
+    #         current_individuals = self.population[self.i % self.population_size]
+    #         self.i += 1
+    #         return current_individuals
+    #     else:  # finished all generations
+    #         raise StopIteration
 
     def _init_population(self):
         self.population = self.population_initializer(self.population_size)
@@ -63,11 +63,12 @@ class GeneticAlgorithms(object):
     def _update_population(self):
         print("Update population")
 
-        best_individual = self.population[np.argmax(self.population_fitness)]
-        p = self.population_fitness / np.sum(self.population_fitness)
+        best_individual = self.population[np.nanargmax(self.population_fitness)]
+        p = self.population_fitness / np.nansum(self.population_fitness)
+        p[np.isnan(p)] = 0
         if self.min_objective == True:
             p = 1 - p
-            best_individual = self.population[np.argmin(self.population_fitness)]
+            best_individual = self.population[np.nanargmin(self.population_fitness)]
 
         couples = self.selection_function(p)  # selection
         child = [self.cross_over_function(self.population[c[0]], self.population[c[1]]) for c in couples]  # cross-over
@@ -80,5 +81,17 @@ class GeneticAlgorithms(object):
         self.i = 0
         self.g_index += 1
 
+    def get_current_individual(self):
+        if (self.i % self.population_size) == 0 and self.i != 0:
+            self._update_population()
+        current_individuals = self.population[self.i % self.population_size]
+        self.i += 1
+        return current_individuals
+
     def update_current_individual_fitness(self, individual_fitness):
         self.population_fitness[(self.i - 1) % self.population_size] = individual_fitness
+
+    def sample_child(self):
+        couple = np.random.randint(0, self.population_size, 2)
+        child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
+        return self.mutation_function(child)

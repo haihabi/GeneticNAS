@@ -33,16 +33,25 @@ def draw_network(ss, individual: Individual, path):
     make_dirs(os.path.dirname(path))
     graph = pgv.AGraph(directed=True, strict=True,
                        fontname='Helvetica', arrowtype='open')  # not work?
-    for i in range(ss.n_inputs):
-        add_node(graph, i, 'Input')
 
-    for i, nc in enumerate(individual.generate_node_config()):
-        if i >= ss.n_nodes:
-            add_node(graph, i + ss.n_inputs, 'Output-' + str(nc))
+    for i, oc in enumerate(ss.ocl):
+        if i == 0:
+            for j in range(oc.get_n_inputs()):
+                add_node(graph, j, 'Input' + str(j))
+            add_node(graph, j + 1, type(oc))
         else:
-            add_node(graph, i + ss.n_inputs, 'Node-' + str(nc))
-        for j, v in enumerate(nc.connection_index):
-            if v > 0:
-                graph.add_edge(j, i + ss.n_inputs)
+            print("a")
+
+    # for i in range(ss.n_inputs):
+    #     add_node(graph, i, 'Input')
+    #
+    # for i, nc in enumerate(individual.generate_node_config()):
+    #     if i >= ss.n_nodes:
+    #         add_node(graph, i + ss.n_inputs, 'Output-' + str(nc))
+    #     else:
+    #         add_node(graph, i + ss.n_inputs, 'Node-' + str(nc))
+    #     # for j, v in enumerate(nc.connection_index):
+    #     #     if v > 0:
+    #     graph.add_edge(nc.connection_index, i + ss.n_inputs)
     graph.layout(prog='dot')
     graph.draw(path)

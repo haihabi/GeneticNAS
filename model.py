@@ -56,8 +56,8 @@ class RNNModel(nn.Module):
         emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
-        decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
-        return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
+        decoded = self.decoder(output.contiguous().view(output.size(0) * output.size(1), output.size(2)))
+        return decoded.contiguous().view(output.size(0), output.size(1), decoded.size(1)), hidden
 
     def init_hidden(self, bsz):
         weight = next(self.parameters())

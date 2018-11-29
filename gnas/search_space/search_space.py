@@ -1,34 +1,33 @@
-from gnas.search_space.space_config import OperationConfig, AlignmentConfig
+import numpy as np
+# from gnas.search_space.space_config import OperationConfig, AlignmentConfig
 from gnas.search_space.individual import Individual
-from gnas.modules.node_module import NodeModule
-from gnas.modules.alignment_module import AlignmentModule
+
+
+# from gnas.modules.node_module import NodeModule
+# from gnas.modules.alignment_module import AlignmentModule
 
 
 class SearchSpace(object):
-    def __init__(self, ac: AlignmentConfig, oc: OperationConfig, n_inputs: int, n_nodes: int,
-                 n_outputs: int):
-        self.ac = ac
-        self.oc = oc
-        self.n_inputs = n_inputs
-        self.n_outputs = n_outputs
-        self.n_nodes = n_nodes
+    def __init__(self, operation_config_list: list):
+        self.ocl = operation_config_list
 
-    def generate_nodes_modules(self, n_channels):
-        return [NodeModule(min(i + self.n_inputs, self.n_inputs + self.n_nodes), n_channels, self.oc) for i in
-                range(self.n_outputs + self.n_nodes)]
+    def get_operation_configs(self):
+        return self.ocl
 
-    def generate_alignment_modules(self, input_size, n_channels):
-        return [AlignmentModule(input_size[i], n_channels, self.ac) for i in range(self.n_inputs)]
+    def get_n_nodes(self):
+        return len(self.ocl)
+
+    def get_max_values_vector(self):
+        return [o.max_values_vector(i) for i, o in enumerate(self.ocl)]
+
+    @staticmethod
+    def generate_vector(max_values):
+        return np.asarray([np.random.randint(0, mv) for mv in max_values])
 
     def generate_individual(self):
-        connection_vector = []
-        operation_vector = []
-        for i in range(self.n_inputs, self.n_inputs + self.n_nodes + self.n_outputs):
-            cv, ov = self.oc.generate_operation_vector(
-                max_inputs=min(i, self.n_inputs + self.n_nodes))
-            connection_vector.append(cv)
-            operation_vector.append(ov)
-        return Individual(connection_vector, operation_vector, self.oc)
+        operation_vector = [self.generate_vector(o.max_values_vector(i)) for i, o in enumerate(self.ocl)]
+        max_inputs = [i for i, _ in enumerate(self.ocl)]
+        return Individual(operation_vector, max_inputs, self)
 
     def generate_population(self, size):
         return [self.generate_individual() for _ in range(size)]

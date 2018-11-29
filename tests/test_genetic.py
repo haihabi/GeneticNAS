@@ -12,8 +12,8 @@ class TestGenetic(unittest.TestCase):
         n = 250
         population_size = 20
 
-        def population_initializer():
-            return np.round(np.random.rand(20, 4))
+        def population_initializer(p_size):
+            return np.round(np.random.rand(p_size, 4))
 
         def mutation_function(x):
             return flip_bit(x, 1 / n)
@@ -42,7 +42,7 @@ class TestGenetic(unittest.TestCase):
             ga.update_current_individual_fitness(objective_function(indvudal))
 
     def test_search_space(self):
-        ss = gnas.get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
+        ss = gnas.get_enas_rnn_search_space(32, 128, 12)
         ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
         for i in ga:
             ga.update_current_individual_fitness(0 + np.random.rand(1))
