@@ -51,6 +51,8 @@ class GeneticAlgorithms(object):
         print(self.population_fitness)
         f_mean = np.mean(self.population_fitness)
         f_var = np.var(self.population_fitness)
+        f_max = np.max(self.population_fitness)
+        f_min = np.min(self.population_fitness)
         best_individual = self.population[np.nanargmax(self.population_fitness)]
         p = self.population_fitness / np.nansum(self.population_fitness)
         p[np.isnan(p)] = 0
@@ -67,8 +69,10 @@ class GeneticAlgorithms(object):
             self.population[best_index] = best_individual
         # update generation index and individual index
         self.i = 0
-        print("Update population | mean fitness: {:5.2f} | var fitness {:5.2f} |".format(f_mean, f_var))
-        return f_mean, f_var
+        print(
+            "Update population | mean fitness: {:5.2f} | var fitness {:5.2f} || max fitness: {:5.2f} | min fitness {:5.2f} |".format(
+                f_mean, f_var, f_max, f_min))
+        return f_mean, f_var, f_max, f_min
 
     def get_current_individual(self):
         current_individuals = self.population[self.i % self.population_size]
@@ -78,7 +82,10 @@ class GeneticAlgorithms(object):
     def update_current_individual_fitness(self, individual_fitness):
         self.population_fitness[(self.i - 1) % self.population_size] = individual_fitness
 
-    def sample_child(self):
-        couple = np.random.randint(0, self.population_size, 2)
-        child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
-        return self.mutation_function(child)
+    def sample_child(self, p):
+        if p > np.random.rand(1):
+            return self.population_initializer(1)[0]
+        else:
+            couple = np.random.randint(0, self.population_size, 2)
+            child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
+            return self.mutation_function(child)

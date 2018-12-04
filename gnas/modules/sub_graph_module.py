@@ -19,6 +19,7 @@ class SubGraphModule(nn.Module):
         # Avg
         return torch.mean(torch.stack([net[i] for i in self.avg_index], dim=-1), dim=-1)
 
+
     def set_individual(self, individual: Individual):
         si_list = []
         for nc, nm in zip(individual.generate_node_config(), self.node_modules):
@@ -29,3 +30,4 @@ class SubGraphModule(nn.Module):
         current_node_list = np.unique(si_list)
         self.avg_index = np.asarray([n.node_id for n in self.ss.ocl if n.node_id not in current_node_list]).astype(
             'int')
+

@@ -10,7 +10,7 @@ from torch import optim
 import data
 import model
 import gnas
-from rnn_utils import repackage_hidden
+from rnn_utils import repackage_hidden, train_rnn, rnn_genetic_evaluate
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='./data/wikitext-2',
@@ -131,99 +131,87 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 # by the batchify function. The chunks are along dimension 0, corresponding
 # to the seq_len dimension in the LSTM.
 
-def get_batch(source, i):
-    seq_len = min(args.bptt, len(source) - 1 - i)
-    data = source[i:i + seq_len]
-    target = source[i + 1:i + 1 + seq_len].view(-1)
-    return data, target
-
-
-def genetic_evaluate(ga, data_source):
-    # Turn on evaluation mode which disables dropout.
-    # model.eval()
-    # n_individual_update = 0
-    # n_batchs = int(data_source.size(0) / args.bptt)
-    ntokens = len(corpus.dictionary)
-    hidden = model.init_hidden(eval_batch_size)
-    model.eval()
-    with torch.no_grad():
-        for inv in range(ga.population_size):
-            total_loss = 0
-            model.set_individual(ga.get_current_individual())
-            for i in range(0, data_source.size(0) - 1, args.bptt):
-                data, targets = get_batch(data_source, i)
-                output, hidden = model(data, hidden)
-                output_flat = output.view(-1, ntokens)
-                total_loss += len(data) * criterion(output_flat, targets).item()
-                hidden = repackage_hidden(hidden)
-            ga.update_current_individual_fitness(total_loss / (len(data_source) - 1))
-    return ga.update_population()
-
-
-def evaluate(data_source):
-    # Turn on evaluation mode which disables dropout.
-    model.eval()
-    total_loss = 0.
-    ntokens = len(corpus.dictionary)
-    hidden = model.init_hidden(eval_batch_size)
-    with torch.no_grad():
-        for i in range(0, data_source.size(0) - 1, args.bptt):
-            data, targets = get_batch(data_source, i)
-            output, hidden = model(data, hidden)
-            output_flat = output.view(-1, ntokens)
-            total_loss += len(data) * criterion(output_flat, targets).item()
-            hidden = repackage_hidden(hidden)
-    return total_loss / (len(data_source) - 1)
-
-
-def train(ga):
-    # Turn on training mode which enables dropout.
-    model.train()
-    total_loss = 0.
-    start_time = time.time()
-    ntokens = len(corpus.dictionary)
-    hidden = model.init_hidden(args.batch_size)
-    # model.train()
-    for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
-
-        data, targets = get_batch(train_data, i)
-        # Starting each batch, we detach the hidden state from how it was previously produced.
-        # If we didn't, the model would try backpropagating all the way to start of the dataset.
-        hidden = repackage_hidden(hidden)
-        optimizer.zero_grad()
-        # s = time.time()
-        model.set_individual(ga.population_initializer(1)[0])
-        output, hidden = model(data, hidden)
-        # print("Forward time: {:5.2f}".format(time.time() - s))
-        loss = criterion(output.view(-1, ntokens), targets)
-        # s = time.time()
-        loss.backward()
-        # print("Backward time: {:5.2f}".format(time.time() - s))
-        # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
-        optimizer.step()
-
-        total_loss += loss.item()
-
-        if batch % args.log_interval == 0 and batch > 0:
-            cur_loss = total_loss / args.log_interval
-            elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
-                  'loss {:5.2f} | ppl {:8.2f}'.format(
-                epoch, batch, len(train_data) // args.bptt, scheduler.get_lr()[-1],
-                              elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
-            total_loss = 0
-            start_time = time.time()
-    return cur_loss
-
-
-# def export_onnx(path, batch_size, seq_len):
-#     print('The model is also exported in ONNX format at {}'.
-#           format(os.path.realpath(args.onnx_export)))
+# def get_batch(source, i):
+#     seq_len = min(args.bptt, len(source) - 1 - i)
+#     data = source[i:i + seq_len]
+#     target = source[i + 1:i + 1 + seq_len].view(-1)
+#     return data, target
+#
+#
+# def genetic_evaluate(ga, data_source):
+#     # Turn on evaluation mode which disables dropout.
+#     ntokens = len(corpus.dictionary)
+#     hidden = model.init_hidden(eval_batch_size)
 #     model.eval()
-#     dummy_input = torch.LongTensor(seq_len * batch_size).zero_().view(-1, batch_size).to(device)
-#     hidden = model.init_hidden(batch_size)
-#     torch.onnx.export(model, (dummy_input, hidden), path)
+#     with torch.no_grad():
+#         for inv in range(ga.population_size):
+#             total_loss = 0
+#             model.set_individual(ga.get_current_individual())
+#             for i in range(0, data_source.size(0) - 1, args.bptt):
+#                 data, targets = get_batch(data_source, i)
+#                 output, hidden = model(data, hidden)
+#                 output_flat = output.view(-1, ntokens)
+#                 total_loss += len(data) * criterion(output_flat, targets).item()
+#                 hidden = repackage_hidden(hidden)
+#             ga.update_current_individual_fitness(total_loss / (len(data_source) - 1))
+#     return ga.update_population()
+
+
+# def evaluate(data_source):
+#     # Turn on evaluation mode which disables dropout.
+#     model.eval()
+#     total_loss = 0.
+#     ntokens = len(corpus.dictionary)
+#     hidden = model.init_hidden(eval_batch_size)
+#     with torch.no_grad():
+#         for i in range(0, data_source.size(0) - 1, args.bptt):
+#             data, targets = get_batch(data_source, i)
+#             output, hidden = model(data, hidden)
+#             output_flat = output.view(-1, ntokens)
+#             total_loss += len(data) * criterion(output_flat, targets).item()
+#             hidden = repackage_hidden(hidden)
+#     return total_loss / (len(data_source) - 1)
+
+
+# def train(ga):
+#     # Turn on training mode which enables dropout.
+#     model.train()
+#     total_loss = 0.
+#     start_time = time.time()
+#     ntokens = len(corpus.dictionary)
+#     hidden = model.init_hidden(args.batch_size)
+#     # model.train()
+#     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
+#
+#         data, targets = get_batch(train_data, i)
+#         # Starting each batch, we detach the hidden state from how it was previously produced.
+#         # If we didn't, the model would try backpropagating all the way to start of the dataset.
+#         hidden = repackage_hidden(hidden)
+#         optimizer.zero_grad()  # zero old gradients for the next back propgation
+#
+#         model.set_individual(ga.sample_child(p=1))  # updating
+#
+#         output, hidden = model(data, hidden)
+#         loss = criterion(output.view(-1, ntokens), targets)
+#
+#         loss.backward()
+#
+#         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+#         torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+#         optimizer.step()
+#
+#         total_loss += loss.item()
+#
+#         if batch % args.log_interval == 0 and batch > 0:
+#             cur_loss = total_loss / args.log_interval
+#             elapsed = time.time() - start_time
+#             print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
+#                   'loss {:5.2f} | ppl {:8.2f}'.format(
+#                 epoch, batch, len(train_data) // args.bptt, scheduler.get_lr()[-1],
+#                               elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
+#             total_loss = 0
+#             start_time = time.time()
+#     return cur_loss
 
 
 # Loop over epochs.
@@ -232,64 +220,66 @@ best_val_loss = None
 enable_search = True
 # At any point you can hit Ctrl + C to break out of training early.
 try:
-    if enable_search:
-        ga = gnas.genetic_algorithm_searcher(ss, population_size=20, n_generation=30)
-        for epoch in range(1, args.epochs + 1):
-            if epoch > 15:
-                scheduler.step()
-            epoch_start_time = time.time()
-
-            train_loss = train(ga)
-            val_loss, loss_var = genetic_evaluate(ga, val_data)
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                  ''.format(epoch, (time.time() - epoch_start_time),
-                            val_loss))
-            print('-' * 89)
-            # Save the model if the validation loss is the best we've seen so far.
-            if not best_val_loss or val_loss < best_val_loss:
-                with open(args.save, 'wb') as f:
-                    torch.save(model, f)
-                best_val_loss = val_loss
+    # if enable_search:
+    ga = gnas.genetic_algorithm_searcher(ss, population_size=20, n_generation=30)
+    for epoch in range(1, args.epochs + 1):
+        if epoch > 15:
+            scheduler.step()
+        epoch_start_time = time.time()
+        train_loss = train_rnn(ga, train_data, model, optimizer, criterion, ntokens, args.batch_size,
+                               args.bptt, args.clip,
+                               args.log_interval)
+        val_loss, loss_var, max_loss, min_loss = rnn_genetic_evaluate(ga, model, criterion, val_data, ntokens,
+                                                                      eval_batch_size, args.bptt)
+        print('-' * 89)
+        print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | lr {:02.2f} |  '
+              ''.format(epoch, (time.time() - epoch_start_time),
+                        val_loss, scheduler.get_lr()[-1]))
+        print('-' * 89)
+        # Save the model if the validation loss is the best we've seen so far.
+        if not best_val_loss or val_loss < best_val_loss:
+            with open(args.save, 'wb') as f:
+                torch.save(model, f)
+            best_val_loss = val_loss
             # else:
             #     # Anneal the learning rate if no improvement has been seen in the validation dataset.
             #     lr /= 4.0
-
-    else:
-        for epoch in range(1, args.epochs + 1):
-            epoch_start_time = time.time()
-            train()
-            val_loss = evaluate(val_data)
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                  'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
-                                             val_loss, math.exp(val_loss)))
-            print('-' * 89)
-            # Save the model if the validation loss is the best we've seen so far.
-            if not best_val_loss or val_loss < best_val_loss:
-                with open(args.save, 'wb') as f:
-                    torch.save(model, f)
-                best_val_loss = val_loss
-            else:
-                # Anneal the learning rate if no improvement has been seen in the validation dataset.
-                lr /= 4.0
+    #
+    # else:
+    #     for epoch in range(1, args.epochs + 1):
+    #         epoch_start_time = time.time()
+    #         # train()
+    #         val_loss = evaluate(val_data)
+    #         print('-' * 89)
+    #         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+    #               'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
+    #                                          val_loss, math.exp(val_loss)))
+    #         print('-' * 89)
+    #         # Save the model if the validation loss is the best we've seen so far.
+    #         if not best_val_loss or val_loss < best_val_loss:
+    #             with open(args.save, 'wb') as f:
+    #                 torch.save(model, f)
+    #             best_val_loss = val_loss
+    #         else:
+    #             # Anneal the learning rate if no improvement has been seen in the validation dataset.
+    #             lr /= 4.0
 except KeyboardInterrupt:
     print('-' * 89)
     print('Exiting from training early')
 
 # Load the best saved model.
-with open(args.save, 'rb') as f:
-    model = torch.load(f)
-    # after load the rnn params are not a continuous chunk of memory
-    # this makes them a continuous chunk, and will speed up forward pass
-    model.rnn.flatten_parameters()
+# with open(args.save, 'rb') as f:
+#     model = torch.load(f)
+#     # after load the rnn params are not a continuous chunk of memory
+#     # this makes them a continuous chunk, and will speed up forward pass
+#     model.rnn.flatten_parameters()
 
 # Run on test dataset.
-test_loss = evaluate(test_data)
-print('=' * 89)
-print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-    test_loss, math.exp(test_loss)))
-print('=' * 89)
+# test_loss = evaluate(test_data)
+# print('=' * 89)
+# print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
+#     test_loss, math.exp(test_loss)))
+# print('=' * 89)
 
 # if len(args.onnx_export) > 0:
 #     # Export the model in ONNX format.
