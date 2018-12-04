@@ -13,9 +13,9 @@ class TestSearchSpace(unittest.TestCase):
     @staticmethod
     def generate_ss():
         nll = ['Tanh', 'ReLU', 'ReLU6', 'Sigmoid']
-        node_config_list = [RnnInputNodeConfig(32, 128, nll)]
+        node_config_list = [RnnInputNodeConfig(0, [], 32, 128, nll)]
         for i in range(12):
-            node_config_list.append(RnnNodeConfig(128, nll))
+            node_config_list.append(RnnNodeConfig(i + 1, [0], 128, nll))
         ss = SearchSpace(node_config_list)
         return ss
 
@@ -32,13 +32,13 @@ class TestSearchSpace(unittest.TestCase):
             individual_c = individual_uniform_crossover(individual_a, individual_b)
             self._test_individual(individual_c, ss.get_n_nodes())
 
-    def test_plot_individual(self):
-        current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        ss = self.generate_ss()
-        if os.path.isfile(os.path.join(current_path, 'graph.png')):
-            os.remove(os.path.join(current_path, 'graph.png'))
-        individual = ss.generate_individual()
-        draw_network(ss, individual, os.path.join(current_path, 'graph.png'))
+    # def test_plot_individual(self):
+    #     current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    #     ss = self.generate_ss()
+    #     if os.path.isfile(os.path.join(current_path, 'graph.png')):
+    #         os.remove(os.path.join(current_path, 'graph.png'))
+    #     individual = ss.generate_individual()
+    #     draw_network(ss, individual, os.path.join(current_path, 'graph.png'))
 
     def _test_individual(self, individual, n_nodes):
         # self.assertTrue(len(individual.connection_vector) == (n_nodes + n_output))

@@ -1,11 +1,14 @@
 import numpy as np
+import pickle
+import os
 from random import choices
 from gnas.search_space.search_space import SearchSpace
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.search_space.mutation import individual_flip_mutation
+from gnas.genetic_algorithm.ga_results import GenetricResult
 
 
-def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, n_generation=15, elitism=True):
+def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, elitism=True):
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
 
@@ -21,13 +24,13 @@ def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, n_
         return np.reshape(np.asarray(couples), [-1, 2])
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
-                             min_objective=True, n_generation=n_generation, population_size=population_size,
+                             min_objective=True, population_size=population_size,
                              elitism=elitism)
 
 
 class GeneticAlgorithms(object):
     def __init__(self, population_initializer, mutation_function, cross_over_function, selection_function,
-                 population_size=20, n_generation=100, min_objective=False,
+                 population_size=20, min_objective=False,
                  elitism=False):
         self.population_initializer = population_initializer
         self.mutation_function = mutation_function
@@ -35,9 +38,9 @@ class GeneticAlgorithms(object):
         self.selection_function = selection_function
         self.elitism = elitism
         self.population_size = population_size
-        self.n_generation = n_generation
         self.i = 0
-        # self.g_index = 0
+        self.ga_result = GenetricResult()
+
         self.population = None
         self.population_fitness = None
         self.min_objective = min_objective
@@ -48,6 +51,7 @@ class GeneticAlgorithms(object):
         self.population_fitness = np.nan * np.ones(self.population_size)
 
     def update_population(self):
+        self.ga_result.add_result(self.population_fitness, self.population)
         print(self.population_fitness)
         f_mean = np.mean(self.population_fitness)
         f_var = np.var(self.population_fitness)
@@ -56,7 +60,7 @@ class GeneticAlgorithms(object):
         best_individual = self.population[np.nanargmax(self.population_fitness)]
         p = self.population_fitness / np.nansum(self.population_fitness)
         p[np.isnan(p)] = 0
-        if self.min_objective == True:
+        if self.min_objective:
             p = 1 - p
             best_individual = self.population[np.nanargmin(self.population_fitness)]
 
@@ -89,3 +93,6 @@ class GeneticAlgorithms(object):
             couple = np.random.randint(0, self.population_size, 2)
             child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
             return self.mutation_function(child)
+
+    def save_result(self, input_path):
+        pickle.dump(os.path.join(input_path, 'ga_result.pickle'), open("save.p", "wb"))

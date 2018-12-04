@@ -32,19 +32,19 @@ class TestGenetic(unittest.TestCase):
         # mutation_function, cross_over_function, selection_function
         ga = GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function)
         population = ga.population
-        for i, indvudal in enumerate(ga):
+        for i in range(10):
             self.assertTrue(np.sum(np.isnan(ga.population_fitness)) == (population_size - (i % population_size)))
             if i != 0 and i % population_size == 0:
                 self.assertTrue(np.sum(np.abs(ga.population - population)) != 0)
                 population = ga.population
             else:
                 self.assertTrue(np.sum(np.abs(ga.population - population)) == 0)
-            ga.update_current_individual_fitness(objective_function(indvudal))
+            ga.update_current_individual_fitness(objective_function(ga.get_current_individual()))
 
     def test_search_space(self):
         ss = gnas.get_enas_rnn_search_space(32, 128, 12)
         ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
-        for i in ga:
+        for i in range(10):
             ga.update_current_individual_fitness(0 + np.random.rand(1))
 
 

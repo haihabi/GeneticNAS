@@ -5,6 +5,15 @@ import math
 
 
 def get_batch(source, i, bptt):
+    # get_batch subdivides the source dataset into chunks of length args.bptt.
+    # If source is equal to the example output of the batchify function, with
+    # a bptt-limit of 2, we'd get the following two Variables for i = 0:
+    # ┌ a g m s ┐ ┌ b h n t ┐
+    # └ b h n t ┘ └ c i o u ┘
+    # Note that despite the name of the function, the subdivison of dataset is not
+    # done along the batch dimension (i.e. dimension 1), since that was handled
+    # by the batchify function. The chunks are along dimension 0, corresponding
+    # to the seq_len dimension in the LSTM.
     seq_len = min(bptt, len(source) - 1 - i)
     data = source[i:i + seq_len]
     target = source[i + 1:i + 1 + seq_len].view(-1)
@@ -19,7 +28,7 @@ def rnn_genetic_evaluate(ga, input_model, input_criterion, data_source, ntokens,
             total_loss = 0
             input_model.set_individual(ga.get_current_individual())
             for i in range(0, data_source.size(0) - 1, bptt):
-                data, targets = get_batch(data_source, i)
+                data, targets = get_batch(data_source, i, bptt)
                 output, hidden = input_model(data, hidden)
                 output_flat = output.view(-1, ntokens)
                 total_loss += len(data) * input_criterion(output_flat, targets).item()
@@ -28,8 +37,9 @@ def rnn_genetic_evaluate(ga, input_model, input_criterion, data_source, ntokens,
     return ga.update_population()
 
 
-def train_rnn(ga, train_data, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt, grad_clip,
-              log_interval):
+def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
+                      grad_clip,
+                      log_interval):
     # Turn on training mode which enables dropout.
     input_model.train()
     total_loss = 0.
@@ -37,13 +47,11 @@ def train_rnn(ga, train_data, input_model, input_optimizer, input_criterion, nto
     start_time = time.time()
     hidden = input_model.init_hidden(batch_size)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
-
         data, targets = get_batch(train_data, i, bptt)
         # Starting each batch, we detach the hidden state from how it was previously produced.
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
         input_optimizer.zero_grad()  # zero old gradients for the next back propgation
-
         input_model.set_individual(ga.sample_child(p=1))  # updating
 
         output, hidden = input_model(data, hidden)

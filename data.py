@@ -24,6 +24,17 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path):
+        # Starting from sequential dataset, batchify arranges the dataset into columns.
+        # For instance, with the alphabet as the sequence and batch size 4, we'd get
+        # ┌ a g m s ┐
+        # │ b h n t │
+        # │ c i o u │
+        # │ d j p v │
+        # │ e k q w │
+        # └ f l r x ┘.
+        # These columns are treated as independent by the model, which means that the
+        # dependence of e. g. 'g' on 'f' can not be learned, but allows more efficient
+        # batch processing.
         self.dictionary = Dictionary()
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
