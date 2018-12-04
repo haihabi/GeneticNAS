@@ -5,9 +5,9 @@ from gnas.search_space.individual import Individual
 from gnas.modules.sub_graph_module import SubGraphModule
 
 
-class RnnSearchModule(nn.Module):
+class CnnSearchModule(nn.Module):
     def __init__(self, in_channels, n_channels, working_device, ss):
-        super(RnnSearchModule, self).__init__()
+        super(CnnSearchModule, self).__init__()
 
         self.ss = ss
         self.in_channels = in_channels
@@ -27,19 +27,9 @@ class RnnSearchModule(nn.Module):
 
         for i in torch.split(inputs_tensor, split_size_or_sections=1, dim=0):  # Loop over time steps
             state = self.cell(i, state)
-            state_norm = state.norm(dim=-1)
-            max_norm = 25.0
-            if torch.any(state_norm > max_norm).item():
-                clip_select = state_norm > max_norm
-                clip_norms = state_norm[clip_select]
-
-                mask = torch.ones(state.size(), device=self.working_device)
-                normalizer = max_norm / clip_norms
-                mask[clip_select, :] = normalizer.unsqueeze(dim=-1)
-                mask = mask.detach()
-                state *= mask
-                # print(np.max(state.norm(dim=-1).detach().cpu().numpy()))
-                # print("Max Norm pass")
+            if np.any(state.norm(dim=-1).detach().cpu().numpy() > 25):
+                print(np.max(state.norm(dim=-1).detach().cpu().numpy()))
+                print("Max Norm pass")
             # state = state / state.norm(dim=-1)
             outputs.append(state)
         output = torch.stack(outputs, dim=0)

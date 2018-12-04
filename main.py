@@ -10,7 +10,7 @@ from torch import optim
 import data
 import model
 import gnas
-import numpy as np
+from rnn_utils import repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='./data/wikitext-2',
@@ -99,7 +99,6 @@ train_data, val_data, test_data = corpus.batchify(args.batch_size, device)
 ###############################################################################
 
 ntokens = len(corpus.dictionary)
-# get_search_space('Linear', 'ENAS-RNN', n_inputs=2, n_nodes=11, n_outputs=1)
 ss = gnas.get_enas_rnn_search_space(args.emsize, args.nhid, 12)
 model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied, ss=ss).to(
     device)
@@ -114,12 +113,12 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 # Training code
 ###############################################################################
 
-def repackage_hidden(h):
-    """Wraps hidden states in new Tensors, to detach them from their history."""
-    if isinstance(h, torch.Tensor):
-        return h.detach()
-    else:
-        return tuple(repackage_hidden(v) for v in h)
+# def repackage_hidden(h):
+#     """Wraps hidden states in new Tensors, to detach them from their history."""
+#     if isinstance(h, torch.Tensor):
+#         return h.detach()
+#     else:
+#         return tuple(repackage_hidden(v) for v in h)
 
 
 # get_batch subdivides the source dataset into chunks of length args.bptt.
@@ -139,9 +138,31 @@ def get_batch(source, i):
     return data, target
 
 
-def evaluate(data_source):
+def genetic_evaluate(ga, data_source):
     # Turn on evaluation mode which disables dropout.
     # model.eval()
+    # n_individual_update = 0
+    # n_batchs = int(data_source.size(0) / args.bptt)
+    ntokens = len(corpus.dictionary)
+    hidden = model.init_hidden(eval_batch_size)
+    model.eval()
+    with torch.no_grad():
+        for inv in range(ga.population_size):
+            total_loss = 0
+            model.set_individual(ga.get_current_individual())
+            for i in range(0, data_source.size(0) - 1, args.bptt):
+                data, targets = get_batch(data_source, i)
+                output, hidden = model(data, hidden)
+                output_flat = output.view(-1, ntokens)
+                total_loss += len(data) * criterion(output_flat, targets).item()
+                hidden = repackage_hidden(hidden)
+            ga.update_current_individual_fitness(total_loss / (len(data_source) - 1))
+    return ga.update_population()
+
+
+def evaluate(data_source):
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
     total_loss = 0.
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(eval_batch_size)
@@ -162,17 +183,22 @@ def train(ga):
     start_time = time.time()
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(args.batch_size)
+    # model.train()
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
-        model.set_individual(ga.sample_child())
+
         data, targets = get_batch(train_data, i)
         # Starting each batch, we detach the hidden state from how it was previously produced.
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
         optimizer.zero_grad()
+        # s = time.time()
+        model.set_individual(ga.population_initializer(1)[0])
         output, hidden = model(data, hidden)
+        # print("Forward time: {:5.2f}".format(time.time() - s))
         loss = criterion(output.view(-1, ntokens), targets)
-
+        # s = time.time()
         loss.backward()
+        # print("Backward time: {:5.2f}".format(time.time() - s))
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
         torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
         optimizer.step()
@@ -184,7 +210,7 @@ def train(ga):
             elapsed = time.time() - start_time
             print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                epoch, batch, len(train_data) // args.bptt, lr,
+                epoch, batch, len(train_data) // args.bptt, scheduler.get_lr()[-1],
                               elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
@@ -207,16 +233,14 @@ enable_search = True
 # At any point you can hit Ctrl + C to break out of training early.
 try:
     if enable_search:
-        ga = gnas.genetic_algorithm_searcher(ss, population_size=5, n_generation=30)
+        ga = gnas.genetic_algorithm_searcher(ss, population_size=20, n_generation=30)
         for epoch in range(1, args.epochs + 1):
             if epoch > 15:
                 scheduler.step()
             epoch_start_time = time.time()
 
             train_loss = train(ga)
-            model.set_individual(ga.get_current_individual())
-            val_loss = evaluate(val_data)
-            ga.update_current_individual_fitness(val_loss)
+            val_loss, loss_var = genetic_evaluate(ga, val_data)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                   ''.format(epoch, (time.time() - epoch_start_time),

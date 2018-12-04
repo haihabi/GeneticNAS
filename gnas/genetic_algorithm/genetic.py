@@ -37,32 +37,20 @@ class GeneticAlgorithms(object):
         self.population_size = population_size
         self.n_generation = n_generation
         self.i = 0
-        self.g_index = 0
+        # self.g_index = 0
         self.population = None
         self.population_fitness = None
         self.min_objective = min_objective
         self._init_population()
 
-    # def __iter__(self):
-    #     return self
-    #
-    # def __next__(self):
-    #     if self.g_index < self.n_generation:
-    #         if (self.i % self.population_size) == 0 and self.i != 0:
-    #             self._update_population()
-    #         current_individuals = self.population[self.i % self.population_size]
-    #         self.i += 1
-    #         return current_individuals
-    #     else:  # finished all generations
-    #         raise StopIteration
-
     def _init_population(self):
         self.population = self.population_initializer(self.population_size)
         self.population_fitness = np.nan * np.ones(self.population_size)
 
-    def _update_population(self):
-        print("Update population")
-
+    def update_population(self):
+        print(self.population_fitness)
+        f_mean = np.mean(self.population_fitness)
+        f_var = np.var(self.population_fitness)
         best_individual = self.population[np.nanargmax(self.population_fitness)]
         p = self.population_fitness / np.nansum(self.population_fitness)
         p[np.isnan(p)] = 0
@@ -79,11 +67,10 @@ class GeneticAlgorithms(object):
             self.population[best_index] = best_individual
         # update generation index and individual index
         self.i = 0
-        self.g_index += 1
+        print("Update population | mean fitness: {:5.2f} | var fitness {:5.2f} |".format(f_mean, f_var))
+        return f_mean, f_var
 
     def get_current_individual(self):
-        if (self.i % self.population_size) == 0 and self.i != 0:
-            self._update_population()
         current_individuals = self.population[self.i % self.population_size]
         self.i += 1
         return current_individuals

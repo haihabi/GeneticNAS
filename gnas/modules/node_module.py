@@ -25,8 +25,9 @@ class RnnInputNodeModule(nn.Module):
 
     def forward(self, inputs):
         c = self.sigmoid(self.x_linear_list[0](inputs[0]) + self.h_linear_list[0](inputs[1]))
-        return c * self.non_linear(self.x_linear_list[1](inputs[0]) + self.h_linear_list[1](inputs[1])) + (1 - c) * \
-               inputs[1]
+        output = c * self.non_linear(self.x_linear_list[1](inputs[0]) + self.h_linear_list[1](inputs[1])) + (1 - c) * \
+                 inputs[1]
+        return output
 
     def set_current_node_config(self, current_config):
         nl_index = self.nc.parse_config(current_config)
@@ -42,13 +43,14 @@ class RnnNodeModule(nn.Module):
 
         self.n_channels = self.nc.recurrent_size
         self.nl_module = generate_non_linear(self.nc.non_linear_list)
+        # self.bn = nn.BatchNorm1d(self.n_channels, affine=False)
 
         self.x_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('c_linear' + str(i), m) for i, m in enumerate(self.x_linear_list)]
         self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
-
+        self.bn=nn.BatchNorm1d(self.n_channels)
         self.non_linear = None
         self.node_config = None
 
