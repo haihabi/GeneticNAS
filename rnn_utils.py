@@ -2,6 +2,7 @@ import os
 import torch
 import time
 import math
+from gnas.genetic_algorithm.annealing_functions import cosine_annealing
 
 
 def get_batch(source, i, bptt):
@@ -37,7 +38,7 @@ def rnn_genetic_evaluate(ga, input_model, input_criterion, data_source, ntokens,
     return ga.update_population()
 
 
-def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
+def train_genetic_rnn(ga, train_data, p, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
                       grad_clip,
                       log_interval):
     # Turn on training mode which enables dropout.
@@ -52,7 +53,7 @@ def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criter
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
         input_optimizer.zero_grad()  # zero old gradients for the next back propgation
-        input_model.set_individual(ga.sample_child(p=1))  # updating
+        input_model.set_individual(ga.sample_child(p=p))  # updating
 
         output, hidden = input_model(data, hidden)
         loss = input_criterion(output.view(-1, ntokens), targets)

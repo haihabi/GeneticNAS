@@ -8,6 +8,7 @@ import data
 import model
 import gnas
 from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate
+from gnas.genetic_algorithm.annealing_functions import cosine_annealing
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='./data/wikitext-2',
@@ -85,12 +86,13 @@ best_val_loss = None
 enable_search = True
 # At any point you can hit Ctrl + C to break out of training early.
 try:
-    ga = gnas.genetic_algorithm_searcher(ss, population_size=20, n_generation=30)
+    ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
     for epoch in range(1, args.epochs + 1):
         if epoch > 15:
             scheduler.step()
         epoch_start_time = time.time()
-        train_loss = train_genetic_rnn(ga, train_data, model, optimizer, criterion, ntokens, args.batch_size,
+        p = cosine_annealing(epoch, 1, 15, 125)
+        train_loss = train_genetic_rnn(ga, train_data, p, model, optimizer, criterion, ntokens, args.batch_size,
                                        args.bptt, args.clip,
                                        args.log_interval)
         val_loss, loss_var, max_loss, min_loss = rnn_genetic_evaluate(ga, model, criterion, val_data, ntokens,
