@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
+
 class EmbeddingDropout(torch.nn.Embedding):
     """Class for dropping out embeddings by zero'ing out parameters in the
     embedding matrix.
@@ -97,22 +98,13 @@ class RNNModel(nn.Module):
 
     def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers, dropout=0.5, tie_weights=False, ss=None):
         super(RNNModel, self).__init__()
-        self.drop = LockedDropout(dropout)
-        self.encoder = EmbeddingDropout(ntoken, ninp, dropout=dropout)
+        self.drop_input = LockedDropout(0.65)  # TODO:change to input config
+        self.drop_end = LockedDropout(0.4)  # TODO:change to input config
+        self.encoder = EmbeddingDropout(ntoken, ninp, dropout=0.1)  # TODO:change to input config
         self.ss = ss
-        if rnn_type == 'GNAS':
-            self.rnn = gnas.modules.RnnSearchModule(in_channels=ninp, n_channels=nhid,
-                                                    working_device='cuda',
-                                                    ss=self.ss)
-        elif rnn_type in ['LSTM', 'GRU']:
-            self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, dropout=dropout)
-        else:
-            try:
-                nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[rnn_type]
-            except KeyError:
-                raise ValueError("""An invalid option for `--model` was supplied,
-                                 options are ['LSTM', 'GRU', 'RNN_TANH' or 'RNN_RELU']""")
-            self.rnn = nn.RNN(ninp, nhid, nlayers, nonlinearity=nonlinearity, dropout=dropout)
+        self.rnn = gnas.modules.RnnSearchModule(in_channels=ninp, n_channels=nhid,
+                                                working_device='cuda',
+                                                ss=self.ss)
         self.decoder = nn.Linear(nhid, ntoken)
 
         # Optionally tie weights as in:
@@ -133,8 +125,7 @@ class RNNModel(nn.Module):
         self.nlayers = nlayers
 
     def set_individual(self, individual):
-        if self.ss is not None:
-            self.rnn.set_individual(individual)
+        self.rnn.set_individual(individual)
 
     def init_weights(self):
         initrange = 0.1
@@ -143,9 +134,9 @@ class RNNModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, input, hidden):
-        emb = self.drop(self.encoder(input))
+        emb = self.drop_input(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
-        output = self.drop(output)
+        output = self.drop_end(output)
         decoded = self.decoder(output.contiguous().view(output.size(0) * output.size(1), output.size(2)))
         return decoded.contiguous().view(output.size(0), output.size(1), decoded.size(1)), hidden
 

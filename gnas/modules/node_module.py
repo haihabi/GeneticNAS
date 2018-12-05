@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from gnas.modules.module_generator import generate_non_linear
+from gnas.modules.weight_drop import WeightDrop
 
 
 class RnnInputNodeModule(nn.Module):
@@ -9,14 +10,16 @@ class RnnInputNodeModule(nn.Module):
         super(RnnInputNodeModule, self).__init__()
         if node_config.get_n_inputs() != 2: raise Exception('aaa')
         self.nc = node_config
-
+        dropout = 0.5  # TODO:change to input config
         self.in_channels = self.nc.x_size
         self.n_channels = self.nc.recurrent_size
         self.nl_module = generate_non_linear(self.nc.non_linear_list)
 
         self.x_linear_list = [nn.Linear(self.in_channels, self.n_channels) for _ in range(2)]
         [self.add_module('c_linear' + str(i), m) for i, m in enumerate(self.x_linear_list)]
-        self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(2)]
+        self.h_linear_list = [WeightDrop(nn.Linear(self.n_channels, self.n_channels), ['weight'], dropout, True) for _
+                              in
+                              range(2)]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
 
@@ -50,7 +53,7 @@ class RnnNodeModule(nn.Module):
         self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
-        self.bn=nn.BatchNorm1d(self.n_channels)
+        self.bn = nn.BatchNorm1d(self.n_channels)
         self.non_linear = None
         self.node_config = None
 
