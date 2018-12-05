@@ -72,7 +72,7 @@ def train_genetic_rnn(ga, train_data, p, input_model, input_optimizer, input_cri
             elapsed = time.time() - start_time
             print('|  {:5d}/{:5d} batches | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(batch, len(train_data) // bptt, elapsed * 1000 / log_interval,
-                                                      total_loss / log_interval, math.exp(cur_loss / log_interval)))
+                                                      total_loss / log_interval, math.exp(total_loss / log_interval)))
             total_loss = 0
             start_time = time.time()
     return cur_loss / len(train_data)
