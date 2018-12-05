@@ -84,6 +84,7 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 lr = args.lr
 best_val_loss = None
 enable_search = True
+ra = gnas.ResultAppender()
 # At any point you can hit Ctrl + C to break out of training early.
 try:
     ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
@@ -91,10 +92,11 @@ try:
         if epoch > 15:
             scheduler.step()
         epoch_start_time = time.time()
-        p = cosine_annealing(epoch, 1, 15, 125)
+        p = cosine_annealing(epoch, 1, 60, 140)
         train_loss = train_genetic_rnn(ga, train_data, p, model, optimizer, criterion, ntokens, args.batch_size,
                                        args.bptt, args.clip,
                                        args.log_interval)
+
         val_loss, loss_var, max_loss, min_loss = rnn_genetic_evaluate(ga, model, criterion, val_data, ntokens,
                                                                       eval_batch_size, args.bptt)
         print('-' * 89)
@@ -107,7 +109,12 @@ try:
             with open(args.save, 'wb') as f:
                 torch.save(model, f)
             best_val_loss = val_loss
-    ga.save_result('')
+        ra.add_epoch_result('Annealing', p)
+        ra.add_epoch_result('Loss', train_loss)
+        ra.add_epoch_result('LR', scheduler.get_lr()[-1])
+        ra.add_result('Fitness', ga.ga_result.fitness_list)
+        ra.save_result('')
+
 except KeyboardInterrupt:
     print('-' * 89)
     print('Exiting from training early')

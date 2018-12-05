@@ -1,6 +1,5 @@
-import numpy as np
 from gnas.search_space.individual import Individual
-from gnas.genetic_algorithm.cross_over import uniform_crossover, uniform_crossover_sum_one
+from gnas.genetic_algorithm.cross_over import uniform_crossover
 
 
 def individual_uniform_crossover(individual_a: Individual, individual_b: Individual) -> Individual:

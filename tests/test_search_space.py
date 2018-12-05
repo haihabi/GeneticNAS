@@ -2,27 +2,44 @@ import unittest
 import numpy as np
 import os
 import inspect
-# from gnas.search_space.space_config import OperationConfig, AlignmentConfig
+
 from gnas.search_space.operation_space import RnnInputNodeConfig, RnnNodeConfig
 from gnas.search_space.search_space import SearchSpace
+from gnas.search_space.individual import Individual
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.common.graph_draw import draw_network
 
 
 class TestSearchSpace(unittest.TestCase):
     @staticmethod
-    def generate_ss():
+    def generate_block():
         nll = ['Tanh', 'ReLU', 'ReLU6', 'Sigmoid']
         node_config_list = [RnnInputNodeConfig(0, [], 32, 128, nll)]
         for i in range(12):
             node_config_list.append(RnnNodeConfig(i + 1, [0], 128, nll))
-        ss = SearchSpace(node_config_list)
+        return node_config_list
+
+    @staticmethod
+    def generate_ss():
+
+        ss = SearchSpace(TestSearchSpace.generate_block())
+        return ss
+
+    @staticmethod
+    def generate_ss_multiple_blocks():
+        block_list = [TestSearchSpace.generate_block(), TestSearchSpace.generate_block()]
+        ss = SearchSpace(block_list, single_block=False)
         return ss
 
     def test_basic(self):
         ss = self.generate_ss()
         individual = ss.generate_individual()
-        # self._test_individual(individual, n_nodes, n_output)
+        self._test_individual(individual, ss.get_n_nodes())
+
+    def test_basic_multiple(self):
+        ss = self.generate_ss_multiple_blocks()
+        individual = ss.generate_individual()
+        self._test_individual(individual, ss.get_n_nodes())
 
     def test_cross_over(self):
         ss = self.generate_ss()
@@ -41,11 +58,12 @@ class TestSearchSpace(unittest.TestCase):
     #     draw_network(ss, individual, os.path.join(current_path, 'graph.png'))
 
     def _test_individual(self, individual, n_nodes):
-        # self.assertTrue(len(individual.connection_vector) == (n_nodes + n_output))
-        self.assertTrue(len(individual.iv) == n_nodes)
-        # for i in individual.connection_vector:
-        #     self.assertTrue(np.sum(i) != 0)
-        individual.generate_node_config()
+        if isinstance(individual, Individual):
+            self.assertTrue(len(individual.iv) == n_nodes)
+            individual.generate_node_config()
+        else:
+            [self.assertTrue(len(ind.iv) == n_nodes[i]) for i, ind in enumerate(individual.individual_list)]
+            individual.generate_node_config()
 
 
 if __name__ == '__main__':

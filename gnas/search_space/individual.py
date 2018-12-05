@@ -17,3 +17,14 @@ class Individual(object):
 
     def update_individual(self, individual_vector):
         return Individual(individual_vector, self.mi, self.ss)
+
+
+class MultipleBlockIndividual(object):
+    def __init__(self, individual_list):
+        self.individual_list = individual_list
+
+    def generate_node_config(self):
+        raise NotImplemented
+
+    def update_individual(self, individual_vector):
+        raise NotImplemented

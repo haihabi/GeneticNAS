@@ -3,6 +3,7 @@ import torch
 import time
 import math
 from gnas.genetic_algorithm.annealing_functions import cosine_annealing
+import numpy as np
 
 
 def get_batch(source, i, bptt):
@@ -67,14 +68,14 @@ def train_genetic_rnn(ga, train_data, p, input_model, input_optimizer, input_cri
         total_loss += loss.item()
 
         if batch % log_interval == 0 and batch > 0:
-            cur_loss = total_loss / log_interval
+            cur_loss += total_loss
             elapsed = time.time() - start_time
             print('|  {:5d}/{:5d} batches | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(batch, len(train_data) // bptt, elapsed * 1000 / log_interval,
-                                                      cur_loss, math.exp(cur_loss)))
+                                                      total_loss / log_interval, math.exp(cur_loss / log_interval)))
             total_loss = 0
             start_time = time.time()
-    return cur_loss
+    return cur_loss / len(train_data)
 
 
 def repackage_hidden(h):

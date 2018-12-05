@@ -94,5 +94,5 @@ class GeneticAlgorithms(object):
             child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
             return self.mutation_function(child)
 
-    def save_result(self, input_path):
-        pickle.dump(os.path.join(input_path, 'ga_result.pickle'), open("save.p", "wb"))
+    def get_result(self):
+        return self.ga_result.fitness_list, self.ga_result.population_list
