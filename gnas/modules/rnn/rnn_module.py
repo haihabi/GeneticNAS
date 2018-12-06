@@ -16,7 +16,7 @@ class RnnSearchModule(nn.Module):
 
         self.sub_graph_module = SubGraphModule(ss)
 
-        self.bn = nn.BatchNorm1d(n_channels, affine=False)
+        self.bn = nn.BatchNorm1d(n_channels)
         self.reset_parameters()
 
     def forward(self, inputs_tensor, state_tensor):
@@ -48,7 +48,7 @@ class RnnSearchModule(nn.Module):
 
     def cell(self, x, state):
         state = self.sub_graph_module(x.squeeze(dim=0), state)
-        return state
+        return self.bn(state)
         # x= self.bn(state)
         # print("a")
 

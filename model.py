@@ -141,11 +141,4 @@ class RNNModel(nn.Module):
         return decoded.contiguous().view(output.size(0), output.size(1), decoded.size(1)), hidden
 
     def init_hidden(self, bsz):
-        weight = next(self.parameters())
-        if self.rnn_type == 'LSTM':
-            return (weight.new_zeros(self.nlayers, bsz, self.nhid),
-                    weight.new_zeros(self.nlayers, bsz, self.nhid))
-        elif self.rnn_type == 'GNAS':
-            return self.rnn.init_state(bsz)
-        else:
-            return weight.new_zeros(self.nlayers, bsz, self.nhid)
+        return self.rnn.init_state(bsz)
