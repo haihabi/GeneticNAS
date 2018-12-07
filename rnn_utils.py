@@ -75,7 +75,7 @@ def train_genetic_rnn(ga, train_data, p, input_model, input_optimizer, input_cri
                                                       total_loss / log_interval, math.exp(total_loss / log_interval)))
             total_loss = 0
             start_time = time.time()
-    return cur_loss / len(train_data)
+    return (bptt * cur_loss) / len(train_data)
 
 
 def repackage_hidden(h):

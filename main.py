@@ -21,13 +21,13 @@ parser.add_argument('--nhid', type=int, default=200,
                     help='number of hidden units per layer')
 parser.add_argument('--nlayers', type=int, default=2,
                     help='number of layers')
-parser.add_argument('--lr', type=float, default=20,
+parser.add_argument('--lr', type=float, default=20.0,
                     help='initial learning rate')
 parser.add_argument('--clip', type=float, default=0.25,
                     help='gradient clipping')
 parser.add_argument('--epochs', type=int, default=40,
                     help='upper epoch limit')
-parser.add_argument('--batch_size', type=int, default=20, metavar='N',
+parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                     help='batch size')
 parser.add_argument('--bptt', type=int, default=35,
                     help='sequence length')
@@ -68,7 +68,7 @@ train_data, val_data, test_data = corpus.batchify(args.batch_size, device)
 ###############################################################################
 
 ntokens = len(corpus.dictionary)
-ss = gnas.get_enas_rnn_search_space(args.emsize, args.nhid, 12)
+ss = gnas.get_enas_rnn_search_space(12)
 model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied, ss=ss).to(
     device)
 model.set_individual(ss.generate_individual())
@@ -92,7 +92,7 @@ try:
         if epoch > 15:
             scheduler.step()
         epoch_start_time = time.time()
-        p = cosine_annealing(epoch, 1, 60, 140)
+        p = 0
         train_loss = train_genetic_rnn(ga, train_data, p, model, optimizer, criterion, ntokens, args.batch_size,
                                        args.bptt, args.clip,
                                        args.log_interval)

@@ -8,6 +8,7 @@ import gnas
 
 
 class TestGenetic(unittest.TestCase):
+
     def test_basic_problem(self):
         n = 250
         population_size = 20
@@ -42,7 +43,7 @@ class TestGenetic(unittest.TestCase):
             ga.update_current_individual_fitness(objective_function(ga.get_current_individual()))
 
     def test_search_space(self):
-        ss = gnas.get_enas_rnn_search_space(32, 128, 12)
+        ss = gnas.get_enas_rnn_search_space(12)
         ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
         for i in range(10):
             ga.update_current_individual_fitness(0 + np.random.rand(1))

@@ -24,7 +24,7 @@ class SearchSpace(object):
 
     def generate_vector(self, max_values):
         # if self.single_block:
-        return np.asarray([np.random.randint(0, mv) for mv in max_values])
+        return np.asarray([np.random.randint(0, mv + 1) for mv in max_values])
         # else:
         #     raise NotImplemented
 

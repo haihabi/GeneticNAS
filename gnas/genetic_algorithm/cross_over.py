@@ -5,7 +5,7 @@ def uniform_crossover(array_a: np.ndarray, array_b: np.ndarray):
     if len(array_a.shape) != 1: raise Exception('')
     if len(array_b.shape) != 1: raise Exception('')
     if array_b.shape[0] != array_a.shape[0]: raise Exception('')
-    selection = np.random.randint(0, 1, array_a.shape[0])
+    selection = np.random.randint(0, 2, array_a.shape[0])
     return array_a * selection + array_b * (1 - selection)
 
 

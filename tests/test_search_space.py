@@ -8,15 +8,16 @@ from gnas.search_space.search_space import SearchSpace
 from gnas.search_space.individual import Individual
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.common.graph_draw import draw_network
+from gnas.search_space.mutation import individual_flip_mutation
 
 
 class TestSearchSpace(unittest.TestCase):
     @staticmethod
     def generate_block():
         nll = ['Tanh', 'ReLU', 'ReLU6', 'Sigmoid']
-        node_config_list = [RnnInputNodeConfig(0, [], 32, 128, nll)]
+        node_config_list = [RnnInputNodeConfig(0, [], nll)]
         for i in range(12):
-            node_config_list.append(RnnNodeConfig(i + 1, [0], 128, nll))
+            node_config_list.append(RnnNodeConfig(i + 1, [0], nll))
         return node_config_list
 
     @staticmethod
@@ -36,18 +37,47 @@ class TestSearchSpace(unittest.TestCase):
         individual = ss.generate_individual()
         self._test_individual(individual, ss.get_n_nodes())
 
-    def test_basic_multiple(self):
-        ss = self.generate_ss_multiple_blocks()
-        individual = ss.generate_individual()
-        self._test_individual(individual, ss.get_n_nodes())
+    # def test_basic_multiple(self):
+    #     ss = self.generate_ss_multiple_blocks()
+    #     individual = ss.generate_individual()
+    #     self._test_individual(individual, ss.get_n_nodes())
+
+    def test_mutation(self):
+        ss = self.generate_ss()
+        for i in range(100):
+            individual_a = ss.generate_individual()
+            individual_c = individual_flip_mutation(individual_a, 1 / 10)
+            ce = 0
+            te = 0
+            for a, c in zip(individual_a.iv, individual_c.iv):
+                for ia, ic in zip(a, c):
+                    te += 1
+                    ce += ia != ic
+
+            self._test_individual(individual_c, ss.get_n_nodes())
+        self.assertTrue(ce != te)
+
 
     def test_cross_over(self):
         ss = self.generate_ss()
+        ca = 0
+        cb = 0
+        cc = 0
         for i in range(100):
             individual_a = ss.generate_individual()
             individual_b = ss.generate_individual()
             individual_c = individual_uniform_crossover(individual_a, individual_b)
+
+            for a, b, c in zip(individual_a.iv, individual_b.iv, individual_c.iv):
+                for ia, ib, ic in zip(a, b, c):
+                    cc += 1
+                    ca += ia == ic
+                    cb += ib == ic
+                    self.assertTrue(ia == ic or ib == ic)
+
             self._test_individual(individual_c, ss.get_n_nodes())
+        self.assertTrue(cc != cb)
+        self.assertTrue(cc != ca)
 
     # def test_plot_individual(self):
     #     current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -60,6 +90,11 @@ class TestSearchSpace(unittest.TestCase):
     def _test_individual(self, individual, n_nodes):
         if isinstance(individual, Individual):
             self.assertTrue(len(individual.iv) == n_nodes)
+            for c in individual.iv:
+                if len(c) == 2:
+                    self.assertFalse(np.any(c > 1))
+                else:
+                    self.assertFalse(np.any(c[1:] > 1))
             individual.generate_node_config()
         else:
             [self.assertTrue(len(ind.iv) == n_nodes[i]) for i, ind in enumerate(individual.individual_list)]

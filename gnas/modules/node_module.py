@@ -1,18 +1,18 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from gnas.modules.module_generator import generate_non_linear
+from gnas.modules.module_generator import generate_non_linear, generate_op
 from gnas.modules.weight_drop import WeightDrop
 
 
 class RnnInputNodeModule(nn.Module):
-    def __init__(self, node_config):
+    def __init__(self, node_config, config_dict):
         super(RnnInputNodeModule, self).__init__()
         if node_config.get_n_inputs() != 2: raise Exception('aaa')
         self.nc = node_config
         dropout = 0.5  # TODO:change to input config
-        self.in_channels = self.nc.x_size
-        self.n_channels = self.nc.recurrent_size
+        self.in_channels = config_dict.get('in_channels')
+        self.n_channels = config_dict.get('n_channels')
         self.nl_module = generate_non_linear(self.nc.non_linear_list)
 
         self.x_linear_list = [nn.Linear(self.in_channels, self.n_channels) for _ in range(2)]
@@ -39,21 +39,21 @@ class RnnInputNodeModule(nn.Module):
 
 
 class RnnNodeModule(nn.Module):
-    def __init__(self, node_config):
+    def __init__(self, node_config, config_dict):
         super(RnnNodeModule, self).__init__()
         self.nc = node_config
         if node_config.get_n_inputs() < 1: raise Exception('aaa')
 
-        self.n_channels = self.nc.recurrent_size
+        self.n_channels = config_dict.get('n_channels')
         self.nl_module = generate_non_linear(self.nc.non_linear_list)
-        # self.bn = nn.BatchNorm1d(self.n_channels, affine=False)
+        self.bn = nn.BatchNorm1d(self.n_channels)
 
         self.x_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('c_linear' + str(i), m) for i, m in enumerate(self.x_linear_list)]
         self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
-        self.bn = nn.BatchNorm1d(self.n_channels)
+        # self.bn = nn.BatchNorm1d(self.n_channels)
         self.non_linear = None
         self.node_config = None
 
@@ -68,3 +68,41 @@ class RnnNodeModule(nn.Module):
         self.non_linear = self.nl_module[nl_index]
         self.x_linear = self.x_linear_list[op_index]
         self.h_linear = self.h_linear_list[op_index]
+
+
+class ConvNodeModule(nn.Module):
+    def __init__(self, node_config, config_dict):
+        super(ConvNodeModule, self).__init__()
+        self.nc = node_config
+
+        self.n_channels = config_dict.get('n_channels')
+
+        self.nl_module = generate_non_linear(self.nc.non_linear_list)
+        # self.merge_module = generate_merge(self.nc.merge_list)
+        self.conv_module = []
+        for j in range(node_config.get_n_inputs()):
+            self.conv_module.append(generate_op(self.nc.op_list, self.n_channels, self.n_channels))
+            [self.add_module('conv_op_' + str(i) + '_in_' + str(j), m) for i, m in enumerate(self.conv_module[-1])]
+
+        self.non_linear_a = None
+        self.non_linear_b = None
+        self.input_a = None
+        self.input_b = None
+        self.cc = None
+        self.op_a = None
+        self.op_b = None
+
+    def forward(self, inputs):
+        net_a = inputs[self.input_a]
+        net_b = inputs[self.input_b]
+        return self.non_linear_a(self.op_a(net_a)) + self.non_linear_b(self.op_b(net_b))
+
+    def set_current_node_config(self, current_config):
+        input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b = self.nc.parse_config(current_config)
+        self.cc = current_config
+        self.input_a = input_a
+        self.input_b = input_b
+        self.non_linear_a = self.nl_module[nl_a]
+        self.non_linear_b = self.nl_module[nl_b]
+        self.op_a = self.conv_module[input_index_a][op_a]
+        self.op_b = self.conv_module[input_index_b][op_b]

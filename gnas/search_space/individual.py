@@ -18,6 +18,9 @@ class Individual(object):
     def update_individual(self, individual_vector):
         return Individual(individual_vector, self.mi, self.ss)
 
+    def n_elements(self):
+        return sum([len(i) for i in self.iv])
+
 
 class MultipleBlockIndividual(object):
     def __init__(self, individual_list):

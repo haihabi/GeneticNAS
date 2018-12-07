@@ -13,8 +13,9 @@ class RnnSearchModule(nn.Module):
         self.in_channels = in_channels
         self.n_channels = n_channels
         self.working_device = working_device
-
-        self.sub_graph_module = SubGraphModule(ss)
+        self.config_dict = {'in_channels': self.in_channels,
+                            'n_channels': self.n_channels}
+        self.sub_graph_module = SubGraphModule(ss, self.config_dict)
 
         self.bn = nn.BatchNorm1d(n_channels)
         self.reset_parameters()
@@ -26,7 +27,7 @@ class RnnSearchModule(nn.Module):
         outputs = []
 
         for i in torch.split(inputs_tensor, split_size_or_sections=1, dim=0):  # Loop over time steps
-            state = self.cell(i, state)
+            output, state = self.cell(i, state)
             state_norm = state.norm(dim=-1)
             max_norm = 25.0
             if torch.any(state_norm > max_norm).item():
@@ -41,16 +42,16 @@ class RnnSearchModule(nn.Module):
                 # print(np.max(state.norm(dim=-1).detach().cpu().numpy()))
                 # print("Max Norm pass")
             # state = state / state.norm(dim=-1)
-            outputs.append(state)
+            outputs.append(output)
         output = torch.stack(outputs, dim=0)
 
-        return output, output
+        return output, state.unsqueeze(dim=0)
 
     def cell(self, x, state):
-        state = self.sub_graph_module(x.squeeze(dim=0), state)
-        return self.bn(state)
-        # x= self.bn(state)
-        # print("a")
+        net = self.sub_graph_module(x.squeeze(dim=0), state)
+        output, state = torch.mean(torch.stack([net[i] for i in self.sub_graph_module.avg_index], dim=-1), dim=-1), net[
+            -1]
+        return self.bn(output), state
 
     def set_individual(self, individual: Individual):
         self.sub_graph_module.set_individual(individual)

@@ -6,10 +6,11 @@ from gnas.modules.operation_factory import get_module
 
 
 class SubGraphModule(nn.Module):
-    def __init__(self, search_space):
+    def __init__(self, search_space, config_dict):
         super(SubGraphModule, self).__init__()
         self.ss = search_space
-        self.node_modules = [get_module(oc) for oc in self.ss.ocl]
+        self.config_dict = config_dict
+        self.node_modules = [get_module(oc,config_dict) for oc in self.ss.ocl]
         [self.add_module('Node' + str(i), n) for i, n in enumerate(self.node_modules)]
 
     def forward(self, *input_list):
@@ -17,7 +18,7 @@ class SubGraphModule(nn.Module):
         for nm in self.node_modules:
             net.append(nm(net))
         # Avg
-        return torch.mean(torch.stack([net[i] for i in self.avg_index], dim=-1), dim=-1)
+        return net
 
     def set_individual(self, individual: Individual):
         si_list = []

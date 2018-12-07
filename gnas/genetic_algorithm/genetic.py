@@ -91,8 +91,8 @@ class GeneticAlgorithms(object):
             return self.population_initializer(1)[0]
         else:
             couple = np.random.randint(0, self.population_size, 2)
-            child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
-            return self.mutation_function(child)
+            # child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
+            return self.population[couple[0]]
 
     def get_result(self):
         return self.ga_result.fitness_list, self.ga_result.population_list
