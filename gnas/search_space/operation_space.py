@@ -19,15 +19,14 @@ class RnnInputNodeConfig(object):
     def get_n_inputs(self):
         return len(self.inputs)
 
-    def parse_config(self, config):
-        return vector_bits2int(config.oc)
+    def parse_config(self, oc):
+        return vector_bits2int(oc)
 
 
 class RnnNodeConfig(object):
     def __init__(self, node_id, inputs: list, non_linear_list):
         self.node_id = node_id
         self.inputs = inputs
-        # self.recurrent_size = recurrent_size
         self.non_linear_list = non_linear_list
 
     def get_n_bits(self, max_inputs):
@@ -42,11 +41,11 @@ class RnnNodeConfig(object):
     def get_n_inputs(self):
         return len(self.inputs)
 
-    def parse_config(self, config):
+    def parse_config(self, oc):
         if len(self.inputs) == 1:
-            return self.inputs[0], 0, vector_bits2int(config.oc)
+            return self.inputs[0], 0, vector_bits2int(oc)
         else:
-            return self.inputs[config.oc[0]], config.oc[0], vector_bits2int(config.oc[1:])
+            return self.inputs[oc[0]], oc[0], vector_bits2int(oc[1:])
 
 
 class CnnNodeConfig(object):
@@ -70,17 +69,17 @@ class CnnNodeConfig(object):
     def get_n_inputs(self):
         return len(self.inputs)
 
-    def parse_config(self, config):
+    def parse_config(self, oc):
         if len(self.inputs) == 1:
-            return self.inputs[0], 0, vector_bits2int(config.oc)
+            raise NotImplemented
         else:
-            input_index_a = config.oc[0]
-            input_index_b = config.oc[1]
+            input_index_a = oc[0]
+            input_index_b = oc[1]
             input_a = self.inputs[input_index_a]
             input_b = self.inputs[input_index_b]
-            op_a = vector_bits2int(config.oc[2:4])
-            nl_a = vector_bits2int(config.oc[4:6])
-            op_b = vector_bits2int(config.oc[6:8])
-            nl_b = vector_bits2int(config.oc[8:10])
+            op_a = vector_bits2int(oc[2:4])
+            nl_a = vector_bits2int(oc[4:6])
+            op_b = vector_bits2int(oc[6:8])
+            nl_b = vector_bits2int(oc[8:10])
 
             return input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b

@@ -2,8 +2,6 @@ import argparse
 import time
 import torch.nn as nn
 import torch.onnx
-from torch import optim
-import data
 import model_cnn
 import gnas
 from gnas.genetic_algorithm.annealing_functions import cosine_annealing
@@ -13,14 +11,6 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import math
 
-
-# parser = argparse.ArgumentParser(description='PyTorch GNAS CNN Model')
-# parser.add_argument('--data', type=str, default='cifar10',
-#                     help='dataset name')
-#
-# parser.add_argument('--n_node', type=int, default=4,
-#                     help='The number of nodes in the graph search')
-# args = parser.parse_args()
 class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
     r"""Set the learning rate of each parameter group using a cosine annealing
     schedule, where :math:`\eta_{max}` is set to the initial lr and

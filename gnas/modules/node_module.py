@@ -1,8 +1,6 @@
-import torch
-import numpy as np
 import torch.nn as nn
 from gnas.modules.module_generator import generate_non_linear, generate_op
-from gnas.modules.weight_drop import WeightDrop
+from gnas.modules.rnn.weight_drop import WeightDrop
 
 
 class RnnInputNodeModule(nn.Module):
@@ -33,7 +31,7 @@ class RnnInputNodeModule(nn.Module):
         return output
 
     def set_current_node_config(self, current_config):
-        nl_index = self.nc.parse_config(current_config)
+        nl_index = current_config
         self.cc = current_config
         self.non_linear = self.nl_module[nl_index]
 
@@ -63,7 +61,7 @@ class RnnNodeModule(nn.Module):
         return c * self.non_linear(self.h_linear(x)) + (1 - c) * x
 
     def set_current_node_config(self, current_config):
-        self.select_index, op_index, nl_index = self.nc.parse_config(current_config)
+        self.select_index, op_index, nl_index = current_config
         self.cc = current_config
         self.non_linear = self.nl_module[nl_index]
         self.x_linear = self.x_linear_list[op_index]
@@ -99,7 +97,7 @@ class ConvNodeModule(nn.Module):
         return self.op_a(self.relu(net_a)) + self.op_b(self.relu(net_b))
 
     def set_current_node_config(self, current_config):
-        input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b = self.nc.parse_config(current_config)
+        input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b = current_config
         self.cc = current_config
         self.input_a = input_a
         self.input_b = input_b

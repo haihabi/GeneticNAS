@@ -17,7 +17,6 @@ class SubGraphModule(nn.Module):
         net = list(input_list)
         for nm in self.node_modules:
             net.append(nm(net))
-        # Avg
         return net
 
     def set_individual(self, individual: Individual):

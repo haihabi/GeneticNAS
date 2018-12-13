@@ -36,10 +36,10 @@ __op_dict__ = {'Conv3x3': conv3x3,
 
 def generate_non_linear(non_linear_list):
     return [__nl_dict__.get(nl)() for nl in non_linear_list]
-
-
-def generate_merge(merge_list):
-    return [__nl_dict__.get(nl)() for nl in merge_list]
+#
+#
+# def generate_merge(merge_list):
+#     return [__nl_dict__.get(nl)() for nl in merge_list]
 
 
 def generate_op(op_list, in_channels, out_channels):

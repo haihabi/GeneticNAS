@@ -1,19 +1,13 @@
-class NodeConfig(object):
-    def __init__(self, operation_config):
-        self.oc = operation_config
-
-    def __str__(self):
-        return str(self.oc.non_linear_list[self.nl_index])
-
-
 class Individual(object):
     def __init__(self, individual_vector, max_inputs, search_space):
         self.iv = individual_vector
         self.mi = max_inputs
         self.ss = search_space
+        # Generate config when generating individual
+        self.config_list=[oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.ocl)]
 
     def generate_node_config(self):
-        return [NodeConfig(iv) for iv in self.iv]
+        return self.config_list
 
     def update_individual(self, individual_vector):
         return Individual(individual_vector, self.mi, self.ss)

@@ -1,4 +1,3 @@
-import pygraphviz as pgv
 import os
 from gnas.common.folder_utils import make_dirs
 from gnas.search_space.individual import Individual
@@ -30,6 +29,7 @@ def add_node(graph, node_id, label, shape='box', style='filled'):
 
 
 def draw_network(ss, individual: Individual, path):
+    import pygraphviz as pgv
     make_dirs(os.path.dirname(path))
     graph = pgv.AGraph(directed=True, strict=True,
                        fontname='Helvetica', arrowtype='open')  # not work?
