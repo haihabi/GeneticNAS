@@ -5,10 +5,9 @@ import torch.nn as nn
 import torch.onnx
 from torch import optim
 import data
-import model_rnn
+from models import model_rnn
 import gnas
-from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate
-from gnas.genetic_algorithm.annealing_functions import cosine_annealing
+from rnn_utils import train_genetic_rnn
 
 parser = argparse.ArgumentParser(description='PyTorch Wikitext-2 RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='./data/wikitext-2',

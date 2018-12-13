@@ -1,8 +1,7 @@
-import argparse
 import time
 import torch.nn as nn
 import torch.onnx
-import model_cnn
+from models import model_cnn
 import gnas
 from gnas.genetic_algorithm.annealing_functions import cosine_annealing
 import torch
