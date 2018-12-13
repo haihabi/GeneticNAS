@@ -8,12 +8,12 @@ from gnas.search_space.mutation import individual_flip_mutation
 from gnas.genetic_algorithm.ga_results import GenetricResult
 
 
-def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, elitism=True):
+def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, elitism=True, min_objective=True):
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
 
     def mutation_function(x):
-        return individual_flip_mutation(x, 1 / 50)
+        return individual_flip_mutation(x, 1 / search_space.n_elements)
 
     def cross_over_function(x0, x1):
         return individual_uniform_crossover(x0, x1)
@@ -24,7 +24,7 @@ def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, el
         return np.reshape(np.asarray(couples), [-1, 2])
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
-                             min_objective=True, population_size=population_size,
+                             min_objective=min_objective, population_size=population_size,
                              elitism=elitism)
 
 

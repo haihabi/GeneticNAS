@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.onnx
 from torch import optim
 import data
-import model
+import model_rnn
 import gnas
 from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate
 from gnas.genetic_algorithm.annealing_functions import cosine_annealing
@@ -69,7 +69,8 @@ train_data, val_data, test_data = corpus.batchify(args.batch_size, device)
 
 ntokens = len(corpus.dictionary)
 ss = gnas.get_enas_rnn_search_space(12)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied, ss=ss).to(
+model = model_rnn.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied,
+                           ss=ss).to(
     device)
 model.set_individual(ss.generate_individual())
 criterion = nn.CrossEntropyLoss()
@@ -92,13 +93,14 @@ try:
         if epoch > 15:
             scheduler.step()
         epoch_start_time = time.time()
-        p = 0
+        p = 1  # cosine_annealing(epoch, 1, 8, 30)
         train_loss = train_genetic_rnn(ga, train_data, p, model, optimizer, criterion, ntokens, args.batch_size,
                                        args.bptt, args.clip,
                                        args.log_interval)
 
-        val_loss, loss_var, max_loss, min_loss = rnn_genetic_evaluate(ga, model, criterion, val_data, ntokens,
-                                                                      eval_batch_size, args.bptt)
+        # val_loss, loss_var, max_loss, min_loss = rnn_genetic_evaluate(ga, model, criterion, val_data, ntokens,
+        #                                                               eval_batch_size, args.bptt)
+        val_loss = 100
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | lr {:02.2f} |  '
               ''.format(epoch, (time.time() - epoch_start_time),

@@ -18,6 +18,7 @@ class RnnSearchModule(nn.Module):
         self.sub_graph_module = SubGraphModule(ss, self.config_dict)
 
         self.bn = nn.BatchNorm1d(n_channels)
+        self.bn_state = nn.BatchNorm1d(n_channels)
         self.reset_parameters()
 
     def forward(self, inputs_tensor, state_tensor):
@@ -51,7 +52,7 @@ class RnnSearchModule(nn.Module):
         net = self.sub_graph_module(x.squeeze(dim=0), state)
         output, state = torch.mean(torch.stack([net[i] for i in self.sub_graph_module.avg_index], dim=-1), dim=-1), net[
             -1]
-        return self.bn(output), state
+        return self.bn(output), self.bn_state(output)
 
     def set_individual(self, individual: Individual):
         self.sub_graph_module.set_individual(individual)

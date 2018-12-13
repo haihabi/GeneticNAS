@@ -53,7 +53,7 @@ class RnnNodeModule(nn.Module):
         self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
-        # self.bn = nn.BatchNorm1d(self.n_channels)
+        self.bn = nn.BatchNorm1d(self.n_channels)
         self.non_linear = None
         self.node_config = None
 
@@ -91,11 +91,12 @@ class ConvNodeModule(nn.Module):
         self.cc = None
         self.op_a = None
         self.op_b = None
+        self.relu = nn.ReLU()
 
     def forward(self, inputs):
         net_a = inputs[self.input_a]
         net_b = inputs[self.input_b]
-        return self.non_linear_a(self.op_a(net_a)) + self.non_linear_b(self.op_b(net_b))
+        return self.op_a(self.relu(net_a)) + self.op_b(self.relu(net_b))
 
     def set_current_node_config(self, current_config):
         input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b = self.nc.parse_config(current_config)

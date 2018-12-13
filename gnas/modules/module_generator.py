@@ -3,26 +3,28 @@ from torch import nn
 __nl_dict__ = {'Tanh': nn.Tanh,
                'ReLU': nn.ReLU6,
                'ReLU6': nn.ReLU,
+               'SELU': nn.SELU,
+               'LeakyReLU': nn.LeakyReLU,
                'Sigmoid': nn.Sigmoid}
 
 
 def conv3x3(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1),
+    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def dw_conv3x3(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels),
+    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def conv5x5(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2),
+    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def dw_conv5x5(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2, groups=out_channels),
+    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2, groups=out_channels, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 

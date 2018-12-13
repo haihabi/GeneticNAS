@@ -6,6 +6,7 @@ class SearchSpace(object):
     def __init__(self, operation_config_list: list, single_block=True):
         self.single_block = single_block
         self.ocl = operation_config_list
+        self.n_elements = sum([len(self.generate_vector(o.max_values_vector(i))) for i, o in enumerate(self.ocl)])
 
     def get_operation_configs(self):
         return self.ocl

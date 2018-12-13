@@ -12,14 +12,13 @@ class CnnSearchModule(nn.Module):
         # self.in_channels = in_channels
         self.n_channels = n_channels
         self.working_device = working_device
-        self.config_dict = {'channels': n_channels}
-        self.sub_graph_module1 = SubGraphModule(ss, self.config_dic)
-
-        self.reset_parameters()
+        self.config_dict = {'n_channels': n_channels}
+        self.sub_graph_module = SubGraphModule(ss, self.config_dict)
 
     def forward(self, inputs_tensor, bypass_input):
-        # input size [Time step,Batch,features]
-        return self.sub_graph_module(inputs_tensor, bypass_input)
+        net = self.sub_graph_module(inputs_tensor, bypass_input)
+        output = torch.mean(torch.stack([net[i] for i in self.sub_graph_module.avg_index], dim=-1), dim=-1)
+        return output
 
     def set_individual(self, individual: Individual):
         self.sub_graph_module.set_individual(individual)

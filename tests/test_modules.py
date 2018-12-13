@@ -33,6 +33,26 @@ class TestModules(unittest.TestCase):
             x = torch.randn(32, 64, 16, 16, dtype=torch.float)
             res = sgm(x, y)
 
+    def test_cnn_module(self):
+        batch_size = 64
+        h, w = 16, 16
+        channels = 64
+        input = torch.randn(batch_size, channels, h, w, dtype=torch.float)
+        input_b = torch.randn(batch_size, channels, h, w, dtype=torch.float)
+
+        ss = gnas.get_enas_cnn_search_space(4)
+        rnn = gnas.modules.CnnSearchModule(n_channels=channels, working_device='cpu',
+                                           ss=ss)
+        rnn.set_individual(ss.generate_individual())
+
+        s = time.time()
+        output = rnn(input, input_b)
+        print(time.time() - s)
+        self.assertTrue(output.shape[0] == batch_size)
+        self.assertTrue(output.shape[1] == channels)
+        self.assertTrue(output.shape[2] == h)
+        self.assertTrue(output.shape[3] == w)
+
     def test_rnn_module(self):
         batch_size = 64
         in_channels = 300
