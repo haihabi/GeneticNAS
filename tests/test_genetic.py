@@ -12,12 +12,13 @@ class TestGenetic(unittest.TestCase):
     def test_basic_problem(self):
         n = 250
         population_size = 20
+        n_bits = 20
 
         def population_initializer(p_size):
-            return np.round(np.random.rand(p_size, 4))
+            return np.round(np.random.rand(p_size, n_bits))
 
         def mutation_function(x):
-            return flip_bit(x, 1 / n)
+            return flip_bit(x, 1 / n_bits)
 
         def cross_over_function(x0, x1):
             return uniform_crossover(x0, x1)
@@ -32,15 +33,19 @@ class TestGenetic(unittest.TestCase):
 
         # mutation_function, cross_over_function, selection_function
         ga = GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function)
-        population = ga.population
-        for i in range(10):
-            self.assertTrue(np.sum(np.isnan(ga.population_fitness)) == (population_size - (i % population_size)))
-            if i != 0 and i % population_size == 0:
-                self.assertTrue(np.sum(np.abs(ga.population - population)) != 0)
-                population = ga.population
-            else:
-                self.assertTrue(np.sum(np.abs(ga.population - population)) == 0)
-            ga.update_current_individual_fitness(objective_function(ga.get_current_individual()))
+
+        for e in range(310):
+            population = ga.population
+            for i in range(ga.population.shape[0]):
+                self.assertTrue(np.sum(np.isnan(ga.population_fitness)) == (population_size - (i % population_size)))
+                if i != 0 and i % population_size == 0:
+                    self.assertTrue(np.sum(np.abs(ga.population - population)) != 0)
+                    population = ga.population
+                else:
+                    self.assertTrue(np.sum(np.abs(ga.population - population)) == 0)
+                ga.update_current_individual_fitness(objective_function(ga.get_current_individual()))
+            ga.update_population()
+        print("a")
 
     def test_search_space(self):
         ss = gnas.get_enas_rnn_search_space(12)

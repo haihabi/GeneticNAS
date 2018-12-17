@@ -94,14 +94,15 @@ class ConvNodeModule(nn.Module):
     def forward(self, inputs):
         net_a = inputs[self.input_a]
         net_b = inputs[self.input_b]
-        return self.op_a(self.relu(net_a)) + self.op_b(self.relu(net_b))
+        return self.op_a(net_a) + self.op_b(net_b)
 
     def set_current_node_config(self, current_config):
-        input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b = current_config
+        input_a, input_b, input_index_a, input_index_b, op_a, op_b = current_config
+        self.select_index = [input_a, input_b]
         self.cc = current_config
         self.input_a = input_a
         self.input_b = input_b
-        self.non_linear_a = self.nl_module[nl_a]
-        self.non_linear_b = self.nl_module[nl_b]
+        # self.non_linear_a = self.nl_module[nl_a]
+        # self.non_linear_b = self.nl_module[nl_b]
         self.op_a = self.conv_module[input_index_a][op_a]
         self.op_b = self.conv_module[input_index_b][op_b]

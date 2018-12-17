@@ -8,38 +8,51 @@ __nl_dict__ = {'Tanh': nn.Tanh,
                'Sigmoid': nn.Sigmoid}
 
 
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
+
+
 def conv3x3(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def dw_conv3x3(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels, bias=False),
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def conv5x5(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2, bias=False),
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 5, padding=2, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
 def dw_conv5x5(in_channels, out_channels):
-    return nn.Sequential(nn.Conv2d(in_channels, out_channels, 5, padding=2, groups=out_channels, bias=False),
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 5, padding=2, groups=out_channels, bias=False),
                          nn.BatchNorm2d(out_channels))
+
+
+def identity(in_channels, out_channels):
+    return Identity()
 
 
 __op_dict__ = {'Conv3x3': conv3x3,
                'Dw3x3': dw_conv3x3,
                'Conv5x5': conv5x5,
-               'Dw5x5': dw_conv5x5}
+               'Dw5x5': dw_conv5x5,
+               'Identity': identity}
 
 
 def generate_non_linear(non_linear_list):
     return [__nl_dict__.get(nl)() for nl in non_linear_list]
-#
-#
-# def generate_merge(merge_list):
-#     return [__nl_dict__.get(nl)() for nl in merge_list]
 
 
 def generate_op(op_list, in_channels, out_channels):

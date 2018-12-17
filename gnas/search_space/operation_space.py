@@ -56,7 +56,7 @@ class CnnNodeConfig(object):
         self.op_list = op_list
 
     def get_n_bits(self, max_inputs):
-        return 2 * (np.log2(len(self.non_linear_list)).astype('int') + np.log2(len(self.op_list)).astype('int') + (
+        return 2 * (np.log2(len(self.op_list)).astype('int') + (
                 max_inputs > 1))
 
     def max_values_vector(self, max_inputs):
@@ -78,8 +78,8 @@ class CnnNodeConfig(object):
             input_a = self.inputs[input_index_a]
             input_b = self.inputs[input_index_b]
             op_a = vector_bits2int(oc[2:4])
-            nl_a = vector_bits2int(oc[4:6])
-            op_b = vector_bits2int(oc[6:8])
-            nl_b = vector_bits2int(oc[8:10])
+            # nl_a = vector_bits2int(oc[4:6])
+            op_b = vector_bits2int(oc[4:6])
+            # nl_b = vector_bits2int(oc[8:10])
 
-            return input_a, input_b, input_index_a, input_index_b, op_a, nl_a, op_b, nl_b
+            return input_a, input_b, input_index_a, input_index_b, op_a, op_b

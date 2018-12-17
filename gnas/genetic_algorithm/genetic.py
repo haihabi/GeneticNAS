@@ -66,7 +66,18 @@ class GeneticAlgorithms(object):
 
         couples = self.selection_function(p)  # selection
         child = [self.cross_over_function(self.population[c[0]], self.population[c[1]]) for c in couples]  # cross-over
-        self.population = np.asarray([self.mutation_function(c) for c in child])  # mutation
+
+        population = np.asarray([self.mutation_function(c) for c in child])  # mutation
+        p_array = np.asarray([p.get_array() for p in population])
+        b = np.ascontiguousarray(p_array).view(np.dtype((np.void, p_array.dtype.itemsize * p_array.shape[1])))
+        _, idx = np.unique(b, return_index=True)
+        if len(idx) == self.population_size:
+            self.population = population
+        else:
+            n = self.population_size - len(idx)
+            p_new = self.population_initializer(n)
+            self.population = np.asarray([*[population[i] for i in idx], *p_new])
+
         self.population_fitness = np.nan * np.ones(self.population_size)  # clear fitness results
         if self.elitism:
             best_index = np.random.random_integers(0, self.population_size - 1)
