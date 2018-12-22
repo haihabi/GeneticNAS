@@ -36,22 +36,28 @@ class TestGenetic(unittest.TestCase):
 
         for e in range(310):
             population = ga.population
-            for i in range(ga.population.shape[0]):
+            for i, inv in enumerate(ga.get_current_generation()):
                 self.assertTrue(np.sum(np.isnan(ga.population_fitness)) == (population_size - (i % population_size)))
                 if i != 0 and i % population_size == 0:
                     self.assertTrue(np.sum(np.abs(ga.population - population)) != 0)
                     population = ga.population
                 else:
                     self.assertTrue(np.sum(np.abs(ga.population - population)) == 0)
-                ga.update_current_individual_fitness(objective_function(ga.get_current_individual()))
+                ga.update_current_individual_fitness(inv, objective_function(inv))
             ga.update_population()
         print("a")
 
     def test_search_space(self):
-        ss = gnas.get_enas_rnn_search_space(12)
-        ga = gnas.genetic_algorithm_searcher(ss, population_size=20)
-        for i in range(10):
-            ga.update_current_individual_fitness(0 + np.random.rand(1))
+        ss = gnas.get_enas_cnn_search_space(5)
+        ga = gnas.genetic_algorithm_searcher(ss, population_size=200, generation_size=20)
+        for i in range(300):
+            for i, ind in enumerate(ga.get_current_generation()):
+                ga.sample_child(0.2)
+                ga.update_current_individual_fitness(ind, 0 + np.random.rand(1))
+            ga.update_population()
+            print(len(ga.max_dict))
+            self.assertTrue(len(ga.max_dict) <= 200)
+            self.assertTrue(len(ga.generation))
 
 
 if __name__ == '__main__':

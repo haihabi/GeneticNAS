@@ -102,7 +102,13 @@ class ConvNodeModule(nn.Module):
         self.cc = current_config
         self.input_a = input_a
         self.input_b = input_b
-        # self.non_linear_a = self.nl_module[nl_a]
-        # self.non_linear_b = self.nl_module[nl_b]
         self.op_a = self.conv_module[input_index_a][op_a]
         self.op_b = self.conv_module[input_index_b][op_b]
+        #### set grad false
+        for p in self.parameters():
+            p.requires_grad = False
+        #### set grad true
+        for p in self.op_b.parameters():
+            p.requires_grad = True
+        for p in self.op_a.parameters():
+            p.requires_grad = True

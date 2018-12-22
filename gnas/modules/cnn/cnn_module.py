@@ -5,6 +5,7 @@ from torch.nn.parameter import Parameter
 from gnas.search_space.individual import Individual
 from gnas.modules.sub_graph_module import SubGraphModule
 from torch.nn import functional as F
+from gnas.modules.cnn.se_block import SEBlock
 
 
 class CnnSearchModule(nn.Module):
@@ -15,9 +16,15 @@ class CnnSearchModule(nn.Module):
         self.n_channels = n_channels
         self.config_dict = {'n_channels': n_channels}
         self.sub_graph_module = SubGraphModule(ss, self.config_dict)
-        self.weights = [Parameter(torch.Tensor(n_channels, n_channels, 1, 1)) for _ in range(len(ss.ocl))]
+
+        # self.end_block = nn.Sequential(nn.ReLU(),
+        #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
+        #                                nn.BatchNorm2d(n_channels))
+        self.se_block = SEBlock(n_channels, 8)
         self.bn = nn.BatchNorm2d(n_channels)
         self.relu = nn.ReLU()
+
+        self.weights = [Parameter(torch.Tensor(n_channels, n_channels, 1, 1)) for _ in range(len(ss.ocl))]
         [self.register_parameter('w_' + str(i), w) for i, w in enumerate(self.weights)]
         self.register_parameter('bias', None)
         self.reset_parameters()
@@ -31,9 +38,17 @@ class CnnSearchModule(nn.Module):
     def forward(self, inputs_tensor, bypass_input):
         # print(self.sub_graph_module.avg_index)
         net = self.sub_graph_module(inputs_tensor, bypass_input)
+
         net = torch.cat([net[i] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
         w = torch.cat([self.weights[i - 2] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
-        return self.bn(F.conv2d(self.relu(net), w, self.bias, 1, 0, 1, 1))
+        net = self.bn(F.conv2d(self.relu(net), w, self.bias, 1, 0, 1, 1))
+
+        # net = self.end_block(torch.cat(net[2:], dim=1))
+        return self.se_block(net) + inputs_tensor
+
+        # net = torch.cat([net[i] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
+        # w = torch.cat([self.weights[i - 2] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
+        # return self.bn(F.conv2d(self.relu(net), w, self.bias, 1, 0, 1, 1))
 
     def set_individual(self, individual: Individual):
         self.sub_graph_module.set_individual(individual)

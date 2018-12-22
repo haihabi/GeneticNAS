@@ -10,7 +10,9 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import math
 import os
+import pickle
 import datetime
+from config import default_config, save_config, load_config
 
 
 class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
@@ -58,18 +60,13 @@ class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
 #######################################
 # Parameters
 #######################################
-batch_size = 128
-n_epochs = 310
-n_blocks = 3
-n_nodes = 5
-n_channels = 64
-population_size = 20
+config = default_config()
+print(config)
 #######################################
 # Search Working Device
 #######################################
 working_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(working_device)
-
 ######################################
 # Read dataset and set augmentation
 ######################################
@@ -84,30 +81,33 @@ transform_train = transforms.Compose(
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 trainset = torchvision.datasets.CIFAR10(root='./dataset', train=True,
                                         download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch_size'),
                                           shuffle=True, num_workers=4)
 
 testset = torchvision.datasets.CIFAR10(root='./dataset', train=False,
                                        download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size'),
                                          shuffle=False, num_workers=4)
 ######################################
 # Config model and search space
 ######################################
-ss = gnas.get_enas_cnn_search_space(n_nodes)
-ga = gnas.genetic_algorithm_searcher(ss, population_size=population_size, min_objective=False)
-net = model_cnn.Net(n_blocks, n_channels, 10, ss)
+ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'))
+ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
+                                     population_size=config.get('population_size'), min_objective=False)
+net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
+                    ss)
 net.to(working_device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, nesterov=True, weight_decay=0.0001)
-scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [150, 225])
-# scheduler = CosineAnnealingLR(optimizer, 10, 2, eta_min=0.001, last_epoch=-1)
-
+optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum=config.get('momentum'), nesterov=True,
+                      weight_decay=config.get('weight_decay'))
+scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
+                                           [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
 ##################################################
-# Generate log dir
+# Generate log dir and Save Params
 ##################################################
 log_dir = os.path.join('.', 'logs', datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 os.makedirs(log_dir, exist_ok=True)
+save_config(log_dir, config)
 
 
 def evaulte_single(input_individual, input_model, data_loader, device):
@@ -127,8 +127,12 @@ def evaulte_single(input_individual, input_model, data_loader, device):
     return 100 * correct / total
 
 
+##################################################
+# Start Epochs
+##################################################
 ra = gnas.ResultAppender()
-for epoch in range(n_epochs):  # loop over the dataset multiple times
+best = 0
+for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple times
     # print(epoch)
     running_loss = 0.0
     correct = 0
@@ -136,21 +140,16 @@ for epoch in range(n_epochs):  # loop over the dataset multiple times
     scheduler.step()
     s = time.time()
     net = net.train()
-    p = cosine_annealing(epoch, 1, delay=15, end=150)
-    for i, data in enumerate(trainloader, 0):
+    p = cosine_annealing(epoch, 1, delay=15, end=25)
+    for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
-
         net.set_individual(ga.sample_child(p))
 
-        inputs, labels = data
         inputs = inputs.to(working_device)
         labels = labels.to(working_device)
-        # zero the parameter gradients
-        optimizer.zero_grad()
 
-        # forward + backward + optimize
-
-        outputs = net(inputs)
+        optimizer.zero_grad()  # zero the parameter gradients
+        outputs = net(inputs)  # forward
 
         _, predicted = torch.max(outputs, 1)
         total += labels.size(0)
@@ -158,17 +157,22 @@ for epoch in range(n_epochs):  # loop over the dataset multiple times
 
         loss = criterion(outputs, labels)
 
-        loss.backward()
+        loss.backward()  # backward
 
-        optimizer.step()
+        optimizer.step()  # optimize
 
         # print statistics
         running_loss += loss.item()
 
-    for inv in range(ga.population_size):
-        acc = evaulte_single(ga.get_current_individual(), net, testloader, working_device)
-        ga.update_current_individual_fitness(acc)
-    ga.update_population()
+    for ind in ga.get_current_generation():
+        acc = evaulte_single(ind, net, testloader, working_device)
+        ga.update_current_individual_fitness(ind, acc)
+    _, _, f_max, _ = ga.update_population()
+    if f_max > best:
+        print("Update Best")
+        best = f_max
+        torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
+        pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print('|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|'.format(epoch, (time.time() - s) / 60,
                                                                                 running_loss / i,
                                                                                 100 * correct / total))
@@ -177,6 +181,7 @@ for epoch in range(n_epochs):  # loop over the dataset multiple times
     ra.add_epoch_result('Training Loss', running_loss / i)
     ra.add_epoch_result('Training Accuracy', 100 * correct / total)
     ra.add_result('Fitness', ga.ga_result.fitness_list)
+    ra.add_result('Fitness-Population', ga.ga_result.fitness_full_list)
     ra.save_result(log_dir)
 
 print('Finished Training')

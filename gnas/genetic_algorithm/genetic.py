@@ -1,14 +1,16 @@
 import numpy as np
-import pickle
-import os
+
 from random import choices
 from gnas.search_space.search_space import SearchSpace
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.search_space.mutation import individual_flip_mutation
 from gnas.genetic_algorithm.ga_results import GenetricResult
+from gnas.genetic_algorithm.population_dict import PopulationDict
+from collections import OrderedDict
 
 
-def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, elitism=True, min_objective=True):
+def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300,
+                               min_objective=True):
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
 
@@ -19,91 +21,122 @@ def genetic_algorithm_searcher(search_space: SearchSpace, population_size=10, el
         return individual_uniform_crossover(x0, x1)
 
     def selection_function(p):
-        couples = choices(population=list(range(population_size)), weights=p,
-                          k=2 * population_size)
+        couples = choices(population=list(range(len(p))), weights=p,
+                          k=2 * generation_size)
         return np.reshape(np.asarray(couples), [-1, 2])
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
-                             min_objective=min_objective, population_size=population_size,
-                             elitism=elitism)
+                             min_objective=min_objective, generation_size=generation_size,
+                             population_size=population_size)
 
 
 class GeneticAlgorithms(object):
     def __init__(self, population_initializer, mutation_function, cross_over_function, selection_function,
-                 population_size=20, min_objective=False,
-                 elitism=False):
+                 population_size=300, generation_size=20, keep_size=20, delay=20, min_objective=False):
+        ####################################################################
+        # Functions
+        ####################################################################
         self.population_initializer = population_initializer
         self.mutation_function = mutation_function
         self.cross_over_function = cross_over_function
         self.selection_function = selection_function
-        self.elitism = elitism
+        ####################################################################
+        # parameters
+        ####################################################################
         self.population_size = population_size
-        self.i = 0
-        self.ga_result = GenetricResult()
-
-        self.population = None
-        self.population_fitness = None
+        self.generation_size = generation_size
+        self.keep_size = keep_size
+        self.delay = delay
         self.min_objective = min_objective
-        self._init_population()
+        ####################################################################
+        # status
+        ####################################################################
+        self.max_dict = PopulationDict()
+        self.ga_result = GenetricResult()
+        self.current_dict = dict()
 
-    def _init_population(self):
-        self.population = self.population_initializer(self.population_size)
-        self.population_fitness = np.nan * np.ones(self.population_size)
+        self.generation = self._create_random_generation()
 
-    def update_population(self):
-        self.ga_result.add_result(self.population_fitness, self.population)
-        print(self.population_fitness)
-        f_mean = np.mean(self.population_fitness)
-        f_var = np.var(self.population_fitness)
-        f_max = np.max(self.population_fitness)
-        f_min = np.min(self.population_fitness)
-        best_individual = self.population[np.nanargmax(self.population_fitness)]
-        p = self.population_fitness / np.nansum(self.population_fitness)
-        p[np.isnan(p)] = 0
-        if self.min_objective:
-            p = 1 - p
-            best_individual = self.population[np.nanargmin(self.population_fitness)]
+        self.i = 0
+        self.best_individual = None
 
+    def _create_random_generation(self):
+        return self.population_initializer(self.generation_size)
+
+    def _create_new_generation(self, population, population_fitness):
+        p = population_fitness / np.nansum(population_fitness)
+        if self.min_objective: p = 1 - p
         couples = self.selection_function(p)  # selection
-        child = [self.cross_over_function(self.population[c[0]], self.population[c[1]]) for c in couples]  # cross-over
+        child = [self.cross_over_function(population[c[0]], population[c[1]]) for c in couples]  # cross-over
+        new_generation = np.asarray([self.mutation_function(c) for c in child])  # mutation
 
-        population = np.asarray([self.mutation_function(c) for c in child])  # mutation
-        p_array = np.asarray([p.get_array() for p in population])
+        p_array = np.asarray([p.get_array() for p in new_generation])
         b = np.ascontiguousarray(p_array).view(np.dtype((np.void, p_array.dtype.itemsize * p_array.shape[1])))
         _, idx = np.unique(b, return_index=True)
-        if len(idx) == self.population_size:
-            self.population = population
+        if len(idx) == self.generation_size:
+            generation = new_generation
         else:
-            n = self.population_size - len(idx)
+            n = self.generation_size - len(idx)
             p_new = self.population_initializer(n)
-            self.population = np.asarray([*[population[i] for i in idx], *p_new])
+            generation = np.asarray([*[new_generation[i] for i in idx], *p_new])
+        return generation
 
-        self.population_fitness = np.nan * np.ones(self.population_size)  # clear fitness results
-        if self.elitism:
-            best_index = np.random.random_integers(0, self.population_size - 1)
-            self.population[best_index] = best_individual
-        # update generation index and individual index
-        self.i = 0
+    def update_population(self):
+        self.i += 1
+
+        generation_fitness = np.asarray(list(self.current_dict.values()))
+        generation = list(self.current_dict.keys())
+        self.ga_result.add_generation_result(generation_fitness, generation)
+
+        f_mean = np.mean(generation_fitness)
+        f_var = np.var(generation_fitness)
+        f_max = np.max(generation_fitness)
+        f_min = np.min(generation_fitness)
+
+        self.max_dict.update(self.current_dict)
+        # print(len(self.max_dict))
+        best_max_dict = self.max_dict.filter_top_n(self.keep_size)
+        # print(len(best_max_dict))
+        last_max_dict = self.max_dict.filter_last_n(self.population_size - self.keep_size)
+        # print(len(last_max_dict))
+        self.max_dict = last_max_dict.merge(best_max_dict)
+        # print(len(self.max_dict))
+        # if len(self.max_dict)==180:
+        #     print("a")
+
+        self.current_dict = dict()
+        population_fitness = np.asarray(list(self.max_dict.values())).flatten()
+        population = np.asarray(list(self.max_dict.keys())).flatten()
+        self.best_individual = population[np.argmax(population_fitness)]
+        fp_mean = np.mean(population_fitness)
+        fp_var = np.var(population_fitness)
+        fp_max = np.max(population_fitness)
+        fp_min = np.min(population_fitness)
+        self.ga_result.add_population_result(population_fitness, population)
+        if self.i > self.delay:
+            self.generation = self._create_new_generation(population, population_fitness)
+        else:
+            self.generation = self._create_random_generation()
+
         print(
-            "Update population | mean fitness: {:5.2f} | var fitness {:5.2f} || max fitness: {:5.2f} | min fitness {:5.2f} |".format(
-                f_mean, f_var, f_max, f_min))
+            "Update generation | mean fitness: {:5.2f} | var fitness {:5.2f} | max fitness: {:5.2f} | min fitness {:5.2f} |population size {:d}|".format(
+                f_mean, f_var, f_max, f_min, len(population)))
+        print(
+            "population results | mean fitness: {:5.2f} | var fitness {:5.2f} | max fitness: {:5.2f} | min fitness {:5.2f} |".format(
+                fp_mean, fp_var, fp_max, fp_min))
         return f_mean, f_var, f_max, f_min
 
-    def get_current_individual(self):
-        current_individuals = self.population[self.i % self.population_size]
-        self.i += 1
-        return current_individuals
+    def get_current_generation(self):
+        return self.generation
 
-    def update_current_individual_fitness(self, individual_fitness):
-        self.population_fitness[(self.i - 1) % self.population_size] = individual_fitness
+    def update_current_individual_fitness(self, individual, individual_fitness):
+        self.current_dict.update({individual: individual_fitness})
 
     def sample_child(self, p):
-        if p > np.random.rand(1):
+        if p > np.random.rand(1) or len(self.max_dict) == 0:
             return self.population_initializer(1)[0]
         else:
-            couple = np.random.randint(0, self.population_size, 2)
-            # child = self.cross_over_function(self.population[couple[0]], self.population[couple[1]])
-            return self.population[couple[0]]
-
-    def get_result(self):
-        return self.ga_result.fitness_list, self.ga_result.population_list
+            couple = np.random.randint(0, min(self.generation_size, len(self.max_dict)), 2)  # random select a couple
+            population = list(self.max_dict.keys())
+            child = self.cross_over_function(population[couple[0]], population[couple[1]])
+            return self.mutation_function(child)

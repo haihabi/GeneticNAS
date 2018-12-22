@@ -41,7 +41,7 @@ class TestModules(unittest.TestCase):
         input_b = torch.randn(batch_size, channels, h, w, dtype=torch.float)
 
         ss = gnas.get_enas_cnn_search_space(4)
-        rnn = gnas.modules.CnnSearchModule(n_channels=channels, working_device='cpu',
+        rnn = gnas.modules.CnnSearchModule(n_channels=channels,
                                            ss=ss)
         rnn.set_individual(ss.generate_individual())
 

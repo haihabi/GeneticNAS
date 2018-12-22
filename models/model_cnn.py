@@ -23,7 +23,7 @@ class RepeatBlock(nn.Module):
 
 
 class Net(nn.Module):
-    def __init__(self, n_blocks, n_channels, n_classes, ss):
+    def __init__(self, n_blocks, n_channels, n_classes, dropout, ss):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, n_channels, 3, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
@@ -38,6 +38,7 @@ class Net(nn.Module):
         self.block_repeat_3 = RepeatBlock(n_blocks, 4 * n_channels, ss)
 
         self.pool = nn.MaxPool2d(2, 2)
+        self.dp = nn.Dropout(p=dropout)
         self.fc1 = nn.Linear(4 * n_channels, n_classes)
         self.reset_param()
 
@@ -57,7 +58,7 @@ class Net(nn.Module):
         x = self.block_repeat_3(x)
 
         x = torch.mean(torch.mean(x, dim=-1), dim=-1)
-        return self.fc1(x)
+        return self.fc1(self.dp(x))
 
     def set_individual(self, individual):
         self.block_repeat_1.set_individual(individual)

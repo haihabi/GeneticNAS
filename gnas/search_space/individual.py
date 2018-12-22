@@ -8,6 +8,10 @@ class Individual(object):
         self.ss = search_space
         # Generate config when generating individual
         self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.ocl)]
+        self.code = self.get_array()
+
+    def copy(self):
+        return Individual(self.iv, self.mi, self.ss)
 
     def generate_node_config(self):
         return self.config_list
@@ -19,7 +23,16 @@ class Individual(object):
         return sum([len(i) for i in self.iv])
 
     def get_array(self):
-        return np.asarray(self.iv).flatten()
+        return np.concatenate(self.iv,axis=0)
+
+    def __eq__(self, other):
+        return np.array_equal(self.code, other.code)
+
+    def __str__(self):
+        return "code:" + str(self.code)
+
+    def __hash__(self):
+        return hash(str(self))
 
 
 class MultipleBlockIndividual(object):

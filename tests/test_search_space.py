@@ -37,6 +37,23 @@ class TestSearchSpace(unittest.TestCase):
         individual = ss.generate_individual()
         self._test_individual(individual, ss.get_n_nodes())
 
+    def test_individual(self):
+        ss = self.generate_ss()
+        individual_a = ss.generate_individual()
+        individual_b = ss.generate_individual()
+        individual_a_tag = individual_a.copy()
+        dict2test = dict()
+        self.assertFalse(individual_a == individual_b)
+        self.assertTrue(individual_a_tag == individual_a)
+        dict2test.update({individual_a: 40})
+        dict2test.update({individual_b: 80})
+        dict2test.update({individual_a_tag: 90})
+        self.assertTrue(dict2test.get(individual_a) == 90)
+        self.assertTrue(dict2test.get(individual_a_tag) == 90)
+        self.assertTrue(dict2test.get(individual_b) == 80)
+        self.assertTrue(len(dict2test) == 2)
+        # res_dict
+
     # def test_basic_multiple(self):
     #     ss = self.generate_ss_multiple_blocks()
     #     individual = ss.generate_individual()
@@ -56,7 +73,6 @@ class TestSearchSpace(unittest.TestCase):
 
             self._test_individual(individual_c, ss.get_n_nodes())
         self.assertTrue(ce != te)
-
 
     def test_cross_over(self):
         ss = self.generate_ss()

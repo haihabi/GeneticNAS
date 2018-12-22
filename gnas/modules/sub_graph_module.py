@@ -10,7 +10,7 @@ class SubGraphModule(nn.Module):
         super(SubGraphModule, self).__init__()
         self.ss = search_space
         self.config_dict = config_dict
-        self.node_modules = [get_module(oc,config_dict) for oc in self.ss.ocl]
+        self.node_modules = [get_module(oc, config_dict) for oc in self.ss.ocl]
         [self.add_module('Node' + str(i), n) for i, n in enumerate(self.node_modules)]
 
     def forward(self, *input_list):
