@@ -1,18 +1,19 @@
 import os
-from gnas.common.folder_utils import make_dirs
+import numpy as np
+
 from gnas.search_space.individual import Individual
 
 
 def add_node(graph, node_id, label, shape='box', style='filled'):
-    if label.startswith('Input'):
+    if label.startswith('Input') or label.startswith('x'):
         color = 'skyblue'
     elif label.startswith('Output'):
         color = 'pink'
-    elif 'Tanh' in label:
+    elif 'Tanh' in label or 'Add' in label or 'Concat' in label:
         color = 'yellow'
-    elif 'ReLU' in label:
+    elif 'ReLU' in label or 'Dw' in label or 'Conv' in label:
         color = 'orange'
-    elif 'Sigmoid' in label:
+    elif 'Sigmoid' in label or 'Identity' in label:
         color = 'greenyellow'
     elif label == 'avg':
         color = 'seagreen3'
@@ -30,28 +31,35 @@ def add_node(graph, node_id, label, shape='box', style='filled'):
 
 def draw_network(ss, individual: Individual, path):
     import pygraphviz as pgv
-    make_dirs(os.path.dirname(path))
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     graph = pgv.AGraph(directed=True, strict=True,
                        fontname='Helvetica', arrowtype='open')  # not work?
 
-    for i, oc in enumerate(ss.ocl):
-        if i == 0:
-            for j in range(oc.get_n_inputs()):
-                add_node(graph, j, 'Input' + str(j))
-            add_node(graph, j + 1, type(oc))
-        else:
-            print("a")
+    for i in range(2):
+        add_node(graph, i, 'x[' + str(i) + ']')
 
-    # for i in range(ss.n_inputs):
-    #     add_node(graph, i, 'Input')
-    #
-    # for i, nc in enumerate(individual.generate_node_config()):
-    #     if i >= ss.n_nodes:
-    #         add_node(graph, i + ss.n_inputs, 'Output-' + str(nc))
-    #     else:
-    #         add_node(graph, i + ss.n_inputs, 'Node-' + str(nc))
-    #     # for j, v in enumerate(nc.connection_index):
-    #     #     if v > 0:
-    #     graph.add_edge(nc.connection_index, i + ss.n_inputs)
+    input_list = []
+    for i, oc in enumerate(individual.generate_node_config()):
+        input_a = oc[0]
+        input_b = oc[1]
+        input_list.append(input_a)
+        input_list.append(input_b)
+        op_a = oc[4]
+        op_b = oc[5]
+        add_node(graph, (i + 2) * 10, ss.ocl[i].op_list[op_a])
+        add_node(graph, (i + 2) * 10 + 1, ss.ocl[i].op_list[op_b])
+        graph.add_edge(input_a, (i + 2) * 10)
+        graph.add_edge(input_b, (i + 2) * 10 + 1)
+        add_node(graph, (i + 2), 'Add')
+        graph.add_edge((i + 2) * 10, (i + 2))
+        graph.add_edge((i + 2) * 10 + 1, (i + 2))
+    input_list = np.unique(input_list)
+    op_inputs = [int(i) for i in np.linspace(2, 2 + individual.get_n_op() - 1, individual.get_n_op()) if
+                 i not in input_list]
+    concat_node = i + 3
+    add_node(graph, concat_node, 'Concat')
+    for i in op_inputs:
+        graph.add_edge(i, concat_node)
     graph.layout(prog='dot')
     graph.draw(path)

@@ -6,8 +6,6 @@ class RnnInputNodeConfig(object):
     def __init__(self, node_id, inputs: list, non_linear_list):
         self.node_id = node_id
         self.inputs = inputs
-        # self.x_size = x_size
-        # self.recurrent_size = recurrent_size
         self.non_linear_list = non_linear_list
 
     def get_n_bits(self, max_inputs):
@@ -34,7 +32,7 @@ class RnnNodeConfig(object):
 
     def max_values_vector(self, max_inputs):
         op_bits = np.ones(self.get_n_bits(0))
-        if (max_inputs > 1):
+        if max_inputs > 1:
             return np.concatenate([np.asarray(max_inputs - 1).reshape(1), op_bits])
         return op_bits
 
@@ -62,7 +60,7 @@ class CnnNodeConfig(object):
     def max_values_vector(self, max_inputs):
         max_inputs = len(self.inputs)
         op_bits = np.ones(self.get_n_bits(0))
-        if (max_inputs > 1):
+        if max_inputs > 1:
             return np.concatenate([np.repeat(np.asarray(max_inputs - 1), 2).reshape(-1), op_bits])
         return op_bits
 
@@ -78,8 +76,5 @@ class CnnNodeConfig(object):
             input_a = self.inputs[input_index_a]
             input_b = self.inputs[input_index_b]
             op_a = vector_bits2int(oc[2:4])
-            # nl_a = vector_bits2int(oc[4:6])
             op_b = vector_bits2int(oc[4:6])
-            # nl_b = vector_bits2int(oc[8:10])
-
             return input_a, input_b, input_index_a, input_index_b, op_a, op_b

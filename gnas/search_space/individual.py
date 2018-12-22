@@ -10,6 +10,9 @@ class Individual(object):
         self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.ocl)]
         self.code = self.get_array()
 
+    def get_n_op(self):
+        return len(self.iv)
+
     def copy(self):
         return Individual(self.iv, self.mi, self.ss)
 
@@ -23,7 +26,7 @@ class Individual(object):
         return sum([len(i) for i in self.iv])
 
     def get_array(self):
-        return np.concatenate(self.iv,axis=0)
+        return np.concatenate(self.iv, axis=0)
 
     def __eq__(self, other):
         return np.array_equal(self.code, other.code)

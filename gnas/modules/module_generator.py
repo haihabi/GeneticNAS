@@ -16,6 +16,16 @@ class Identity(nn.Module):
         return x
 
 
+def max_pool3x3(in_channels, out_channels):
+    return nn.Sequential(nn.ReLU(),
+                         nn.MaxPool2d(3, padding=1))
+
+
+def avg_pool3x3(in_channels, out_channels):
+    return nn.Sequential(nn.ReLU(),
+                         nn.AvgPool2d(3, padding=1))
+
+
 def conv3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
                          nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
@@ -48,7 +58,9 @@ __op_dict__ = {'Conv3x3': conv3x3,
                'Dw3x3': dw_conv3x3,
                'Conv5x5': conv5x5,
                'Dw5x5': dw_conv5x5,
-               'Identity': identity}
+               'Identity': identity,
+               'Max3x3': max_pool3x3,
+               'Avg3x3': avg_pool3x3, }
 
 
 def generate_non_linear(non_linear_list):

@@ -9,6 +9,7 @@ from gnas.search_space.individual import Individual
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.common.graph_draw import draw_network
 from gnas.search_space.mutation import individual_flip_mutation
+import gnas
 
 
 class TestSearchSpace(unittest.TestCase):
@@ -95,9 +96,13 @@ class TestSearchSpace(unittest.TestCase):
         self.assertTrue(cc != cb)
         self.assertTrue(cc != ca)
 
-    # def test_plot_individual(self):
-    #     current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    #     ss = self.generate_ss()
+    def test_plot_individual(self):
+        current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+        ss = gnas.get_enas_cnn_search_space(5)
+        ind = ss.generate_individual()
+        draw_network(ss, ind, os.path.join(current_path, 'graph.png'))
+
     #     if os.path.isfile(os.path.join(current_path, 'graph.png')):
     #         os.remove(os.path.join(current_path, 'graph.png'))
     #     individual = ss.generate_individual()
