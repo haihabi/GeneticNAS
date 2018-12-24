@@ -37,9 +37,11 @@ class Net(nn.Module):
         self.bn3 = nn.BatchNorm2d(4 * n_channels)
         self.block_repeat_3 = RepeatBlock(n_blocks, 4 * n_channels, ss)
 
-        self.pool = nn.MaxPool2d(2, 2)
+        self.pool = nn.Sequential(nn.ReLU(),
+                                  nn.MaxPool2d(2, 2))
         self.dp = nn.Dropout(p=dropout)
-        self.fc1 = nn.Linear(4 * n_channels, n_classes)
+        self.fc1 = nn.Sequential(nn.ReLU(),
+                                 nn.Linear(4 * n_channels, n_classes))
         self.reset_param()
 
     def reset_param(self):

@@ -20,7 +20,7 @@ class CnnSearchModule(nn.Module):
         # self.end_block = nn.Sequential(nn.ReLU(),
         #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
         #                                nn.BatchNorm2d(n_channels))
-        self.se_block = SEBlock(n_channels, 8)
+        # self.se_block = SEBlock(n_channels, 8)
         self.bn = nn.BatchNorm2d(n_channels)
         self.relu = nn.ReLU()
 
@@ -44,7 +44,7 @@ class CnnSearchModule(nn.Module):
         net = self.bn(F.conv2d(self.relu(net), w, self.bias, 1, 0, 1, 1))
 
         # net = self.end_block(torch.cat(net[2:], dim=1))
-        return self.se_block(net) + inputs_tensor
+        return net
 
         # net = torch.cat([net[i] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
         # w = torch.cat([self.weights[i - 2] for i in self.sub_graph_module.avg_index if i > 1], dim=1)

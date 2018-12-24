@@ -18,12 +18,12 @@ class Identity(nn.Module):
 
 def max_pool3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
-                         nn.MaxPool2d(3, padding=1))
+                         nn.MaxPool2d(3, stride=1, padding=1))
 
 
 def avg_pool3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
-                         nn.AvgPool2d(3, padding=1))
+                         nn.AvgPool2d(3, stride=1, padding=1))
 
 
 def conv3x3(in_channels, out_channels):
@@ -35,6 +35,18 @@ def conv3x3(in_channels, out_channels):
 def dw_conv3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
                          nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels, bias=False),
+                         nn.BatchNorm2d(out_channels))
+
+
+def dw_conv1x3(in_channels, out_channels):
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, (1, 3), padding=(0, 1), groups=out_channels, bias=False),
+                         nn.BatchNorm2d(out_channels))
+
+
+def dw_conv3x1(in_channels, out_channels):
+    return nn.Sequential(nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, (3, 1), padding=(1, 0), groups=out_channels, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
@@ -56,6 +68,8 @@ def identity(in_channels, out_channels):
 
 __op_dict__ = {'Conv3x3': conv3x3,
                'Dw3x3': dw_conv3x3,
+               'Dw3x1': dw_conv3x1,
+               'Dw1x3': dw_conv1x3,
                'Conv5x5': conv5x5,
                'Dw5x5': dw_conv5x5,
                'Identity': identity,

@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 
-file_list = ["/data/projects/GNAS/logs/2018_12_22_17_06_10"]
+file_list = ["/data/projects/GNAS/logs/2018_12_23_21_32_06"]
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0],'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))

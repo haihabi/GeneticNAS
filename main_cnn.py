@@ -102,6 +102,7 @@ optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum
                       weight_decay=config.get('weight_decay'))
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
                                            [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
+# scheduler = CosineAnnealingLR(optimizer, 10, 2, 0.005)
 ##################################################
 # Generate log dir and Save Params
 ##################################################
@@ -172,6 +173,7 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         print("Update Best")
         best = f_max
         torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
+        gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '.png'))
         pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print('|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|'.format(epoch, (time.time() - s) / 60,
                                                                                 running_loss / i,
