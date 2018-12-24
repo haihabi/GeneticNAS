@@ -13,6 +13,7 @@ import os
 import pickle
 import datetime
 from config import default_config, save_config, load_config
+import argparse
 
 
 class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
@@ -57,10 +58,17 @@ class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
         return lr
 
 
+parser = argparse.ArgumentParser(description='PyTorch GNAS')
+parser.add_argument('--config_file', type=str, default='./data/wikitext-2',
+                    help='location of the config file')
+args = parser.parse_args()
 #######################################
 # Parameters
 #######################################
 config = default_config()
+if args.config_file is not None:
+    print("Loading config file:" + args.config_file)
+    config.update(load_config(args.config_file))
 print(config)
 #######################################
 # Search Working Device

@@ -8,7 +8,7 @@ def save_config(path_dir, config):
 
 
 def load_config(path_dir):
-    with open(os.path.join(path_dir, 'config.json'), 'w') as json_file:
+    with open(path_dir, 'r') as json_file:
         data = json.load(json_file)
     return data
 
