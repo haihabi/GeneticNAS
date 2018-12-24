@@ -133,7 +133,8 @@ class GeneticAlgorithms(object):
             population = np.asarray(list(self.max_dict.keys())).flatten()
             p = population_fitness / np.nansum(population_fitness)
             couples = choices(population=population, weights=p, k=self.generation_size)
-            return couples[0]
+            child = self.cross_over_function(population[couples[0]], population[couples[1]])
+            return self.mutation_function(child)
 
             # couple = np.random.randint(0, min(self.generation_size, len(self.max_dict)), 2)  # random select a couple
             # population = list(self.max_dict.keys())
