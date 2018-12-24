@@ -24,5 +24,6 @@ def default_config():
             'learning_rate': 0.25,
             'weight_decay': 0.0001,
             'dropout': 0.0,
+            'LRType': 'MultiStepLR',
             'num_class': 10,
             'momentum': 0.9}

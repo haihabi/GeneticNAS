@@ -20,7 +20,8 @@ class CnnSearchModule(nn.Module):
         # self.end_block = nn.Sequential(nn.ReLU(),
         #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
         #                                nn.BatchNorm2d(n_channels))
-        # self.se_block = SEBlock(n_channels, 8)
+
+        self.se_block = SEBlock(n_channels, 8)
         self.bn = nn.BatchNorm2d(n_channels)
         self.relu = nn.ReLU()
 

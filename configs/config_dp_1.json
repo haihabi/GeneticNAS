@@ -1,0 +1,12 @@
+{ "batch_size": 256,
+  "n_epochs": 310,
+  "n_blocks": 1,
+  "n_nodes": 5,
+  "n_channels": 64,
+  "generation_size": 20,
+  "population_size": 60,
+  "learning_rate": 0.25,
+  "weight_decay": 0.0001,
+  "dropout": 0.1,
+  "num_class": 10,
+  "momentum": 0.9}

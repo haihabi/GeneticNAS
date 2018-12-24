@@ -71,10 +71,12 @@ class CnnNodeConfig(object):
         if len(self.inputs) == 1:
             raise NotImplemented
         else:
+            n = int(self.get_n_bits(0) / 2)
+
             input_index_a = oc[0]
             input_index_b = oc[1]
             input_a = self.inputs[input_index_a]
             input_b = self.inputs[input_index_b]
-            op_a = vector_bits2int(oc[2:4])
-            op_b = vector_bits2int(oc[4:6])
+            op_a = vector_bits2int(oc[2:+(2 + n)])
+            op_b = vector_bits2int(oc[(2 + n):(2 + 2 * n)])
             return input_a, input_b, input_index_a, input_index_b, op_a, op_b

@@ -3,9 +3,11 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 
-file_list = ["/data/projects/GNAS/logs/2018_12_23_21_32_06"]
+file_list = ["/data/projects/swat/users/haih/GNAS/logs/2018_12_23_22_04_45",
+             "/data/projects/swat/users/haih/GNAS/logs/2018_12_23_19_32_30",
+             "/data/projects/swat/users/haih/GNAS/logs/2018_12_23_19_29_56"]
 if len(file_list) == 1:
-    data = pickle.load(open(os.path.join(file_list[0],'ga_result.pickle'), "rb"))
+    data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))
     mode = False
     epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
@@ -72,7 +74,7 @@ if len(file_list) == 1:
     print("a")
 else:
     for f in file_list:
-        data = pickle.load(open(f, "rb"))
+        data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
         fitness = np.stack(data.result_dict.get('Fitness'))
         epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
         plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')

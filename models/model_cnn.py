@@ -25,20 +25,22 @@ class RepeatBlock(nn.Module):
 class Net(nn.Module):
     def __init__(self, n_blocks, n_channels, n_classes, dropout, ss):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, n_channels, 3, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, n_channels, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
-        self.block_repeat_1 = RepeatBlock(n_blocks, n_channels, ss)
+        self.block_repeat_1 = RepeatBlock(1, n_channels, ss)
 
-        self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 3, stride=2, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(2 * n_channels)
         self.block_repeat_2 = RepeatBlock(n_blocks, 2 * n_channels, ss)
 
-        self.conv3 = nn.Conv2d(2 * n_channels, 4 * n_channels, 3, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(2 * n_channels, 4 * n_channels, 3, stride=2, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(4 * n_channels)
         self.block_repeat_3 = RepeatBlock(n_blocks, 4 * n_channels, ss)
 
-        self.pool = nn.Sequential(nn.ReLU(),
-                                  nn.MaxPool2d(2, 2))
+
+
+
+        self.relu = nn.ReLU()
         self.dp = nn.Dropout(p=dropout)
         self.fc1 = nn.Sequential(nn.ReLU(),
                                  nn.Linear(4 * n_channels, n_classes))
@@ -52,11 +54,9 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.bn1(self.conv1(x))
         x = self.block_repeat_1(x)
-        x = self.pool(x)
-        x = self.bn2(self.conv2(x))
+        x = self.bn2(self.conv2(self.relu(x)))
         x = self.block_repeat_2(x)
-        x = self.pool(x)
-        x = self.bn3(self.conv3(x))
+        x = self.bn3(self.conv3(self.relu(x)))
         x = self.block_repeat_3(x)
 
         x = torch.mean(torch.mean(x, dim=-1), dim=-1)

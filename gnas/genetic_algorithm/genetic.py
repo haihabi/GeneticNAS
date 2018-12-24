@@ -1,12 +1,10 @@
 import numpy as np
-
 from random import choices
 from gnas.search_space.search_space import SearchSpace
 from gnas.search_space.cross_over import individual_uniform_crossover
 from gnas.search_space.mutation import individual_flip_mutation
 from gnas.genetic_algorithm.ga_results import GenetricResult
 from gnas.genetic_algorithm.population_dict import PopulationDict
-from collections import OrderedDict
 
 
 def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300,
@@ -94,15 +92,9 @@ class GeneticAlgorithms(object):
         f_min = np.min(generation_fitness)
 
         self.max_dict.update(self.current_dict)
-        # print(len(self.max_dict))
         best_max_dict = self.max_dict.filter_top_n(self.keep_size)
-        # print(len(best_max_dict))
         last_max_dict = self.max_dict.filter_last_n(self.population_size - self.keep_size)
-        # print(len(last_max_dict))
         self.max_dict = last_max_dict.merge(best_max_dict)
-        # print(len(self.max_dict))
-        # if len(self.max_dict)==180:
-        #     print("a")
 
         self.current_dict = dict()
         population_fitness = np.asarray(list(self.max_dict.values())).flatten()
@@ -133,10 +125,17 @@ class GeneticAlgorithms(object):
         self.current_dict.update({individual: individual_fitness})
 
     def sample_child(self, p):
-        if p > np.random.rand(1) or len(self.max_dict) == 0:
+        # if p > np.random.rand(1) or len(self.max_dict) == 0:
+        if self.i < self.delay:
             return self.population_initializer(1)[0]
         else:
-            couple = np.random.randint(0, min(self.generation_size, len(self.max_dict)), 2)  # random select a couple
-            population = list(self.max_dict.keys())
-            child = self.cross_over_function(population[couple[0]], population[couple[1]])
-            return self.mutation_function(child)
+            population_fitness = np.asarray(list(self.max_dict.values())).flatten()
+            population = np.asarray(list(self.max_dict.keys())).flatten()
+            p = population_fitness / np.nansum(population_fitness)
+            couples = choices(population=population, weights=p, k=self.generation_size)
+            return couples[0]
+
+            # couple = np.random.randint(0, min(self.generation_size, len(self.max_dict)), 2)  # random select a couple
+            # population = list(self.max_dict.keys())
+            # child = self.cross_over_function(population[couple[0]], population[couple[1]])
+            # return self.mutation_function(child)

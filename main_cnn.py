@@ -59,8 +59,7 @@ class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
 
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
-parser.add_argument('--config_file', type=str, default='./data/wikitext-2',
-                    help='location of the config file')
+parser.add_argument('--config_file', type=str, help='location of the config file')
 args = parser.parse_args()
 #######################################
 # Parameters
@@ -105,12 +104,21 @@ ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
                     ss)
 net.to(working_device)
+######################################
+# Build Optimizer and Loss function
+#####################################
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum=config.get('momentum'), nesterov=True,
                       weight_decay=config.get('weight_decay'))
-scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
-                                           [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
-# scheduler = CosineAnnealingLR(optimizer, 10, 2, 0.005)
+######################################
+# Select Learning schedule
+#####################################
+if config.get('LRType') == 'CosineAnnealingLR':
+    scheduler = CosineAnnealingLR(optimizer, 10, 2, 0.005)
+else:
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
+                                               [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
+#
 ##################################################
 # Generate log dir and Save Params
 ##################################################
@@ -183,9 +191,11 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
         gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '.png'))
         pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
-    print('|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|'.format(epoch, (time.time() - s) / 60,
-                                                                                running_loss / i,
-                                                                                100 * correct / total))
+    print(
+        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|'.format(epoch, (time.time() - s) / 60,
+                                                                                          running_loss / i,
+                                                                                          100 * correct / total,
+                                                                                          scheduler.get_lr()[-1]))
     ra.add_epoch_result('Annealing', p)
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)
