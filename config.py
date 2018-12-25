@@ -18,7 +18,7 @@ def default_config():
             'n_epochs': 310,
             'n_blocks': 2,
             'n_nodes': 5,
-            'n_channels': 32,
+            'n_channels': 64,
             'generation_size': 20,
             'population_size': 60,
             'learning_rate': 0.25,

@@ -13,7 +13,7 @@ def get_enas_rnn_search_space(n_nodes) -> SearchSpace:
 
 def get_enas_cnn_search_space(n_nodes) -> SearchSpace:
     nll = ['SELU', 'ReLU', 'ReLU6', 'LeakyReLU']
-    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3', 'Dw1x3', 'Dw3x1', 'Identity']
+    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
     node_config_list = [CnnNodeConfig(2, [0, 1], nll, op)]
     for i in range(n_nodes - 1):
         node_config_list.append(CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), nll, op))

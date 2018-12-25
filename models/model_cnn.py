@@ -37,9 +37,6 @@ class Net(nn.Module):
         self.bn3 = nn.BatchNorm2d(4 * n_channels)
         self.block_repeat_3 = RepeatBlock(n_blocks, 4 * n_channels, ss)
 
-
-
-
         self.relu = nn.ReLU()
         self.dp = nn.Dropout(p=dropout)
         self.fc1 = nn.Sequential(nn.ReLU(),
