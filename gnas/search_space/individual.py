@@ -2,13 +2,13 @@ import numpy as np
 
 
 class Individual(object):
-    def __init__(self, individual_vector, max_inputs, search_space):
+    def __init__(self, individual_vector, max_inputs, search_space,index=0):
         self.iv = individual_vector
         self.mi = max_inputs
         self.ss = search_space
         # Generate config when generating individual
-        self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.ocl)]
-        self.code = self.get_array()
+        self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.get_opeartion_config(index))]
+        self.code = np.concatenate(self.iv, axis=0)
 
     def get_n_op(self):
         return len(self.iv)
@@ -21,12 +21,6 @@ class Individual(object):
 
     def update_individual(self, individual_vector):
         return Individual(individual_vector, self.mi, self.ss)
-
-    def n_elements(self):
-        return sum([len(i) for i in self.iv])
-
-    def get_array(self):
-        return np.concatenate(self.iv, axis=0)
 
     def __eq__(self, other):
         return np.array_equal(self.code, other.code)
@@ -41,9 +35,23 @@ class Individual(object):
 class MultipleBlockIndividual(object):
     def __init__(self, individual_list):
         self.individual_list = individual_list
+        self.code=np.concatenate([i.code for i in self.individual_list])
 
-    def generate_node_config(self):
-        raise NotImplemented
+    def get_individual(self, index):
+        return self.individual_list[index]
+
+
+    def generate_node_config(self,index=0):
+        return self.individual_list[index].generate_node_config()
 
     def update_individual(self, individual_vector):
         raise NotImplemented
+
+    def __eq__(self, other):
+        return np.array_equal(self.code, other.code)
+
+    def __str__(self):
+        return "code:" + str(self.code)
+
+    def __hash__(self):
+        return hash(str(self))

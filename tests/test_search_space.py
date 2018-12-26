@@ -55,10 +55,10 @@ class TestSearchSpace(unittest.TestCase):
         self.assertTrue(len(dict2test) == 2)
         # res_dict
 
-    # def test_basic_multiple(self):
-    #     ss = self.generate_ss_multiple_blocks()
-    #     individual = ss.generate_individual()
-    #     self._test_individual(individual, ss.get_n_nodes())
+    def test_basic_multiple(self):
+        ss = self.generate_ss_multiple_blocks()
+        individual = ss.generate_individual()
+        self._test_individual(individual, ss.get_n_nodes())
 
     def test_mutation(self):
         ss = self.generate_ss()
@@ -101,7 +101,14 @@ class TestSearchSpace(unittest.TestCase):
 
         ss = gnas.get_enas_cnn_search_space(5)
         ind = ss.generate_individual()
-        draw_network(ss, ind, os.path.join(current_path, 'graph.png'))
+        draw_network(ss, ind, os.path.join(current_path, 'graph'))
+
+    def test_plot_individual_dual(self):
+        current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+        ss = gnas.get_enas_cnn_search_space_dual(5)
+        ind = ss.generate_individual()
+        draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     #     if os.path.isfile(os.path.join(current_path, 'graph.png')):
     #         os.remove(os.path.join(current_path, 'graph.png'))

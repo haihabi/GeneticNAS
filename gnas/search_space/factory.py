@@ -18,3 +18,18 @@ def get_enas_cnn_search_space(n_nodes) -> SearchSpace:
     for i in range(n_nodes - 1):
         node_config_list.append(CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), nll, op))
     return SearchSpace(node_config_list)
+
+
+def get_enas_cnn_search_space_dual(n_nodes) -> SearchSpace:
+    nll = ['SELU', 'ReLU', 'ReLU6', 'LeakyReLU']
+    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
+    node_config_list_a = [CnnNodeConfig(2, [0, 1], nll, op)]
+    for i in range(n_nodes - 1):
+        node_config_list_a.append(CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), nll, op))
+
+    nll = ['SELU', 'ReLU', 'ReLU6', 'LeakyReLU']
+    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
+    node_config_list_b = [CnnNodeConfig(2, [0, 1], nll, op)]
+    for i in range(n_nodes - 1):
+        node_config_list_b.append(CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), nll, op))
+    return SearchSpace([node_config_list_a,node_config_list_b],single_block=False)

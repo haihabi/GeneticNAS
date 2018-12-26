@@ -9,13 +9,13 @@ from gnas.modules.cnn.se_block import SEBlock
 
 
 class CnnSearchModule(nn.Module):
-    def __init__(self, n_channels, ss):
+    def __init__(self, n_channels, ss,individual_index=0):
         super(CnnSearchModule, self).__init__()
 
         self.ss = ss
         self.n_channels = n_channels
         self.config_dict = {'n_channels': n_channels}
-        self.sub_graph_module = SubGraphModule(ss, self.config_dict)
+        self.sub_graph_module = SubGraphModule(ss, self.config_dict,individual_index=individual_index)
 
         # self.end_block = nn.Sequential(nn.ReLU(),
         #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
@@ -24,8 +24,10 @@ class CnnSearchModule(nn.Module):
         self.se_block = SEBlock(n_channels, 8)
         self.bn = nn.BatchNorm2d(n_channels)
         self.relu = nn.ReLU()
-
-        self.weights = [Parameter(torch.Tensor(n_channels, n_channels, 1, 1)) for _ in range(len(ss.ocl))]
+        if self.ss.single_block:
+            self.weights = [Parameter(torch.Tensor(n_channels, n_channels, 1, 1)) for _ in range(len(ss.ocl))]
+        else:
+            self.weights = [Parameter(torch.Tensor(n_channels, n_channels, 1, 1)) for _ in range(len(ss.ocl[individual_index]))]
         [self.register_parameter('w_' + str(i), w) for i, w in enumerate(self.weights)]
         self.register_parameter('bias', None)
         self.reset_parameters()

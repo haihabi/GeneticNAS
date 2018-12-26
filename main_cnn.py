@@ -98,7 +98,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_s
 ######################################
 # Config model and search space
 ######################################
-ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'))
+ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'))
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), min_objective=False)
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
@@ -189,7 +189,7 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         print("Update Best")
         best = f_max
         torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
-        gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '.png'))
+        gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
         pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print(
         '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|'.format(epoch, (time.time() - s) / 60,

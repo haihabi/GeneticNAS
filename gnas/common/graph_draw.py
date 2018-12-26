@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from gnas.search_space.individual import Individual
+from gnas.search_space.individual import Individual,MultipleBlockIndividual
 
 
 def add_node(graph, node_id, label, shape='box', style='filled'):
@@ -29,13 +29,11 @@ def add_node(graph, node_id, label, shape='box', style='filled'):
     )
 
 
-def draw_network(ss, individual: Individual, path):
-    import pygraphviz as pgv
 
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+def _draw_individual(ocl,individual,path):
+    import pygraphviz as pgv
     graph = pgv.AGraph(directed=True, strict=True,
                        fontname='Helvetica', arrowtype='open')  # not work?
-
     for i in range(2):
         add_node(graph, i, 'x[' + str(i) + ']')
 
@@ -47,8 +45,8 @@ def draw_network(ss, individual: Individual, path):
         input_list.append(input_b)
         op_a = oc[4]
         op_b = oc[5]
-        add_node(graph, (i + 2) * 10, ss.ocl[i].op_list[op_a])
-        add_node(graph, (i + 2) * 10 + 1, ss.ocl[i].op_list[op_b])
+        add_node(graph, (i + 2) * 10, ocl[i].op_list[op_a])
+        add_node(graph, (i + 2) * 10 + 1, ocl[i].op_list[op_b])
         graph.add_edge(input_a, (i + 2) * 10)
         graph.add_edge(input_b, (i + 2) * 10 + 1)
         add_node(graph, (i + 2), 'Add')
@@ -62,4 +60,11 @@ def draw_network(ss, individual: Individual, path):
     for i in op_inputs:
         graph.add_edge(i, concat_node)
     graph.layout(prog='dot')
-    graph.draw(path)
+    graph.draw(path + '.png')
+
+def draw_network(ss, individual, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if isinstance(individual,Individual):
+        _draw_individual(ss.ocl,individual,path)
+    elif isinstance(individual,MultipleBlockIndividual):
+         [_draw_individual(ocl,inv,path+str(i)) for i,(inv,ocl) in enumerate(zip(individual.individual_list,ss.ocl))]

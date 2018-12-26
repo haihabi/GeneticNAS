@@ -68,7 +68,7 @@ class GeneticAlgorithms(object):
         child = [self.cross_over_function(population[c[0]], population[c[1]]) for c in couples]  # cross-over
         new_generation = np.asarray([self.mutation_function(c) for c in child])  # mutation
 
-        p_array = np.asarray([p.get_array() for p in new_generation])
+        p_array = np.asarray([p.code for p in new_generation])
         b = np.ascontiguousarray(p_array).view(np.dtype((np.void, p_array.dtype.itemsize * p_array.shape[1])))
         _, idx = np.unique(b, return_index=True)
         if len(idx) == self.generation_size:
