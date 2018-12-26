@@ -20,11 +20,11 @@ class SearchSpace(object):
         else:
             return [len(ocl) for ocl in self.ocl]
 
-    def get_max_values_vector(self):
+    def get_max_values_vector(self,index=0):
         if self.single_block:
             return [o.max_values_vector(i) for i, o in enumerate(self.ocl)]
         else:
-            raise NotImplemented
+            return [o.max_values_vector(i) for i, o in enumerate(self.ocl[index])]
 
     def get_opeartion_config(self,index=0):
         if self.single_block:
@@ -49,7 +49,3 @@ class SearchSpace(object):
 
     def generate_population(self, size):
         return [self.generate_individual() for _ in range(size)]
-        # if self.single_block:
-        #     return [self.generate_individual() for _ in range(size)]
-        # else:
-        #     raise NotImplemented

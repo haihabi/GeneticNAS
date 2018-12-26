@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Individual(object):
-    def __init__(self, individual_vector, max_inputs, search_space,index=0):
+    def __init__(self, individual_vector, max_inputs, search_space, index=0):
         self.iv = individual_vector
         self.mi = max_inputs
         self.ss = search_space
@@ -35,13 +35,12 @@ class Individual(object):
 class MultipleBlockIndividual(object):
     def __init__(self, individual_list):
         self.individual_list = individual_list
-        self.code=np.concatenate([i.code for i in self.individual_list])
+        self.code = np.concatenate([i.code for i in self.individual_list])
 
     def get_individual(self, index):
         return self.individual_list[index]
 
-
-    def generate_node_config(self,index=0):
+    def generate_node_config(self, index=0):
         return self.individual_list[index].generate_node_config()
 
     def update_individual(self, individual_vector):

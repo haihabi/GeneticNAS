@@ -116,6 +116,7 @@ class TestSearchSpace(unittest.TestCase):
     #     draw_network(ss, individual, os.path.join(current_path, 'graph.png'))
 
     def _test_individual(self, individual, n_nodes):
+        individual_flip_mutation(individual,0.2)
         if isinstance(individual, Individual):
             self.assertTrue(len(individual.iv) == n_nodes)
             for c in individual.iv:

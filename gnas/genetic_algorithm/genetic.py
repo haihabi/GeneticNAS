@@ -78,7 +78,7 @@ class GeneticAlgorithms(object):
             p_new = self.population_initializer(n)
             generation = np.asarray([*[new_generation[i] for i in idx], *p_new])
         return generation
-    
+
     def update_population(self):
         self.i += 1
 
