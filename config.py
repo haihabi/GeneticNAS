@@ -14,16 +14,16 @@ def load_config(path_dir):
 
 
 def default_config():
-    return {'batch_size': 256,
-            'n_epochs': 310,
-            'n_blocks': 2,
+    return {'batch_size': 128,
+            'n_epochs': 630,
+            'n_blocks': 6,
             'n_nodes': 5,
-            'n_channels': 64,
+            'n_channels': 24,
             'generation_size': 20,
             'population_size': 60,
-            'learning_rate': 0.25,
+            'learning_rate': 0.1,
             'weight_decay': 0.0001,
-            'dropout': 0.0,
-            'LRType': 'MultiStepLR',
+            'dropout': 0.1,
+            'LRType': 'CosineAnnealingLR',
             'num_class': 10,
             'momentum': 0.9}

@@ -14,6 +14,48 @@ import pickle
 import datetime
 from config import default_config, save_config, load_config
 import argparse
+import numpy as np
+
+
+class Cutout(object):
+    """Randomly mask out one or more patches from an image.
+    Args:
+        n_holes (int): Number of patches to cut out of each image.
+        length (int): The length (in pixels) of each square patch.
+    """
+
+    def __init__(self, n_holes, length):
+        self.n_holes = n_holes
+        self.length = length
+
+    def __call__(self, img):
+        """
+        Args:
+            img (Tensor): Tensor image of size (C, H, W).
+        Returns:
+            Tensor: Image with n_holes of dimension length x length cut out of it.
+        """
+        h = img.size(1)
+        w = img.size(2)
+
+        mask = np.ones((h, w), np.float32)
+
+        for n in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+
+            mask[y1: y2, x1: x2] = 0.
+
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img = img * mask
+
+        return img
 
 
 class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
@@ -77,17 +119,23 @@ print(working_device)
 ######################################
 # Read dataset and set augmentation
 ######################################
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-transform_train = transforms.Compose(
-    [transforms.RandomHorizontalFlip(),
-     transforms.RandomCrop([32, 32], padding=4),
-     transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+train_transform = transforms.Compose([])
+normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                 std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+train_transform.transforms.append(transforms.RandomCrop(32, padding=4))
+train_transform.transforms.append(transforms.RandomHorizontalFlip())
+train_transform.transforms.append(transforms.ToTensor())
+train_transform.transforms.append(normalize)
+
+# train_transform.transforms.append(Cutout(n_holes=args.n_holes, length=args.length))
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    normalize])
+
 trainset = torchvision.datasets.CIFAR10(root='./dataset', train=True,
-                                        download=True, transform=transform_train)
+                                        download=True, transform=train_transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch_size'),
                                           shuffle=True, num_workers=4)
 

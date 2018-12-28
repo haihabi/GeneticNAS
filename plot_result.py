@@ -3,9 +3,12 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 
-file_list = ["/data/projects/swat/users/haih/GNAS/logs/2018_12_25_17_59_07",
-             "/data/projects/swat/users/haih/GNAS/logs/2018_12_25_17_59_26",
-             "/data/projects/swat/users/haih/GNAS/logs/2018_12_25_17_59_28"]
+# "/data/projects/GNAS/logs/2018_12_26_08_42_53",
+# "/data/projects/GNAS/logs/2018_12_26_20_58_39",
+#              "/data/projects/GNAS/logs/2018_12_27_07_41_06",
+#              "/data/projects/GNAS/logs/2018_12_27_15_23_01",
+file_list = ["/data/projects/GNAS/logs/2018_12_28_02_03_51",
+             "/data/projects/GNAS/logs/2018_12_27_15_23_01"]
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))

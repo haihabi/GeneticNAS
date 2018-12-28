@@ -92,9 +92,9 @@ class GeneticAlgorithms(object):
         f_min = np.min(generation_fitness)
 
         self.max_dict.update(self.current_dict)
-        best_max_dict = self.max_dict.filter_top_n(self.keep_size)
-        last_max_dict = self.max_dict.filter_last_n(self.population_size - self.keep_size)
-        self.max_dict = last_max_dict.merge(best_max_dict)
+        best_max_dict = self.max_dict.filter_top_n(self.population_size)
+        # last_max_dict = self.max_dict.filter_last_n(self.population_size - self.keep_size)
+        self.max_dict = best_max_dict
 
         self.current_dict = dict()
         population_fitness = np.asarray(list(self.max_dict.values())).flatten()

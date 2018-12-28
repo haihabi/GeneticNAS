@@ -47,6 +47,7 @@ class CnnSearchModule(nn.Module):
         net = self.bn(F.conv2d(self.relu(net), w, self.bias, 1, 0, 1, 1))
 
         # net = self.end_block(torch.cat(net[2:], dim=1))
+        # return net
         return self.se_block(net) + inputs_tensor
 
         # net = torch.cat([net[i] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
