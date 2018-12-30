@@ -27,7 +27,7 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, n_channels, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
-        self.block_1 = RepeatBlock(6, n_channels, ss, individual_index=1)
+        self.block_1 = RepeatBlock(n_blocks, n_channels, ss, individual_index=1)
 
         self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 3, stride=2, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(2 * n_channels)

@@ -7,8 +7,7 @@ from matplotlib import pyplot as plt
 # "/data/projects/GNAS/logs/2018_12_26_20_58_39",
 #              "/data/projects/GNAS/logs/2018_12_27_07_41_06",
 #              "/data/projects/GNAS/logs/2018_12_27_15_23_01",
-file_list = ["/data/projects/GNAS/logs/2018_12_28_02_03_51",
-             "/data/projects/GNAS/logs/2018_12_27_15_23_01"]
+file_list = ["/data/projects/GNAS/logs/2018_12_28_02_03_51","/data/projects/GNAS/logs/2018_12_30_17_18_21"]
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))

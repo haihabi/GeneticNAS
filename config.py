@@ -16,9 +16,9 @@ def load_config(path_dir):
 def default_config():
     return {'batch_size': 128,
             'n_epochs': 630,
-            'n_blocks': 6,
+            'n_blocks': 1,
             'n_nodes': 5,
-            'n_channels': 24,
+            'n_channels': 36,
             'generation_size': 20,
             'population_size': 60,
             'learning_rate': 0.1,
