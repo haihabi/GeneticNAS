@@ -34,7 +34,10 @@ def conv3x3(in_channels, out_channels):
 
 def dw_conv3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
-                         nn.Conv2d(in_channels, out_channels, 3, padding=1, groups=out_channels, bias=False),
+                         nn.Conv2d(in_channels, in_channels, 3, padding=1, groups=out_channels, bias=False),
+                         nn.BatchNorm2d(out_channels),
+                         nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
@@ -58,7 +61,10 @@ def conv5x5(in_channels, out_channels):
 
 def dw_conv5x5(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
-                         nn.Conv2d(in_channels, out_channels, 5, padding=2, groups=out_channels, bias=False),
+                         nn.Conv2d(in_channels, in_channels, 5, padding=2, groups=out_channels, bias=False),
+                         nn.BatchNorm2d(out_channels),
+                         nn.ReLU(),
+                         nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
                          nn.BatchNorm2d(out_channels))
 
 
