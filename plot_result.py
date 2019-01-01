@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 # "/data/projects/GNAS/logs/2018_12_26_20_58_39",
 #              "/data/projects/GNAS/logs/2018_12_27_07_41_06",
 #              "/data/projects/GNAS/logs/2018_12_27_15_23_01",
-file_list = ["/data/projects/GNAS/logs/2018_12_28_02_03_51","/data/projects/GNAS/logs/2018_12_30_17_18_21"]
+file_list = ["/data/projects/GNAS/logs/2018_12_31_22_07_46"]
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))
@@ -67,8 +67,8 @@ if len(file_list) == 1:
         plt.ylabel('Learning Rate')
         plt.grid()
         plt.subplot(2, 3, 5)
-        plt.plot(epochs, np.asarray(data.result_dict.get('Annealing')))
-        plt.title('Annealing Progress')
+        plt.plot(epochs, np.asarray(data.result_dict.get('N')))
+        plt.title('N')
         plt.xlabel('Epoch')
         plt.ylabel('Annealing')
         plt.grid()

@@ -27,23 +27,27 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, n_channels, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
+
         self.block_1 = RepeatBlock(n_blocks, n_channels, ss, individual_index=1)
 
-        self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 3, stride=2, padding=1, bias=False)
+
+        self.avg = nn.AvgPool2d(2)
+        self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 1, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(2 * n_channels)
 
-        self.conv2_prev = nn.Conv2d(n_channels, 2 * n_channels, 3, stride=2, padding=1, bias=False)
+        self.conv2_prev = nn.Conv2d(n_channels, 2 * n_channels, 1, stride=1, padding=1, bias=False)
         self.bn2_prev = nn.BatchNorm2d(2 * n_channels)
         # self
 
         self.block_2_reduce = gnas.modules.CnnSearchModule(2 * n_channels, ss, individual_index=0)
         self.block_2 = RepeatBlock(n_blocks, 2 * n_channels, ss, individual_index=1)
 
-        self.conv3 = nn.Conv2d(2 * n_channels, 4 * n_channels, 3, stride=2, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(2 * n_channels, 4 * n_channels, 1, stride=1, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(4 * n_channels)
 
-        self.conv3_prev = nn.Conv2d(2 * n_channels, 4 * n_channels, 3, stride=2, padding=1, bias=False)
+        self.conv3_prev = nn.Conv2d(2 * n_channels, 4 * n_channels, 1, stride=1, padding=1, bias=False)
         self.bn3_prev = nn.BatchNorm2d(4 * n_channels)
+
         self.block_3_reduce = gnas.modules.CnnSearchModule(4 * n_channels, ss, individual_index=0)
         self.block_3 = RepeatBlock(n_blocks, 4 * n_channels, ss, individual_index=1)
 
@@ -62,13 +66,13 @@ class Net(nn.Module):
         x_prev = self.bn1(self.conv1(x))
         x, x_prev = self.block_1(x_prev, x_prev)
 
-        x = self.bn2(self.conv2(self.relu(x)))
-        x_prev = self.bn2_prev(self.conv2_prev(self.relu(x_prev)))
+        x = self.bn2(self.conv2(self.avg(x)))
+        x_prev = self.bn2_prev(self.conv2_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_2(self.block_2_reduce(x, x_prev), x)
 
-        x = self.bn3(self.conv3(self.relu(x)))
-        x_prev = self.bn3_prev(self.conv3_prev(self.relu(x_prev)))
+        x = self.bn3(self.conv3(self.avg(x)))
+        x_prev = self.bn3_prev(self.conv3_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_3(self.block_3_reduce(x, x_prev), x)
 

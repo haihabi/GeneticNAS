@@ -6,15 +6,16 @@ from gnas.modules.operation_factory import get_module
 
 
 class SubGraphModule(nn.Module):
-    def __init__(self, search_space, config_dict,individual_index=0):
+    def __init__(self, search_space, config_dict, individual_index=0):
         super(SubGraphModule, self).__init__()
         self.ss = search_space
         self.config_dict = config_dict
-        self.individual_index=individual_index
+        self.individual_index = individual_index
         if self.ss.single_block:
             self.node_modules = [get_module(oc, config_dict) for oc in self.ss.ocl]
         else:
             self.node_modules = [get_module(oc, config_dict) for oc in self.ss.ocl[individual_index]]
+        # print(len(self.node_modules))
         [self.add_module('Node' + str(i), n) for i, n in enumerate(self.node_modules)]
 
     def forward(self, *input_list):
@@ -25,7 +26,7 @@ class SubGraphModule(nn.Module):
 
     def set_individual(self, individual: Individual):
         if not self.ss.single_block:
-            individual=individual.get_individual(self.individual_index)
+            individual = individual.get_individual(self.individual_index)
         si_list = []
         for nc, nm in zip(individual.generate_node_config(), self.node_modules):
             nm.set_current_node_config(nc)
@@ -35,7 +36,8 @@ class SubGraphModule(nn.Module):
         current_node_list = np.unique(si_list)
         if self.ss.single_block:
             self.avg_index = np.asarray([n.node_id for n in self.ss.ocl if n.node_id not in current_node_list]).astype(
-            'int')
+                'int')
         else:
-            self.avg_index = np.asarray([n.node_id for n in self.ss.ocl[self.individual_index] if n.node_id not in current_node_list]).astype(
+            self.avg_index = np.asarray(
+                [n.node_id for n in self.ss.ocl[self.individual_index] if n.node_id not in current_node_list]).astype(
                 'int')

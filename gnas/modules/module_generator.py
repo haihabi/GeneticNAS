@@ -16,6 +16,23 @@ class Identity(nn.Module):
         return x
 
 
+def generate_dw_conv(in_channels, out_channels, kernel):
+    padding = int((kernel - 1) / 2)
+    conv1 = nn.Sequential(nn.ReLU(),
+                          nn.Conv2d(in_channels, in_channels, kernel, padding=padding, groups=in_channels, bias=False),
+                          nn.BatchNorm2d(out_channels),
+                          nn.ReLU(),
+                          nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
+                          nn.BatchNorm2d(out_channels))
+    conv2 = nn.Sequential(nn.ReLU(),
+                          nn.Conv2d(in_channels, in_channels, kernel, padding=padding, groups=in_channels, bias=False),
+                          nn.BatchNorm2d(out_channels),
+                          nn.ReLU(),
+                          nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
+                          nn.BatchNorm2d(out_channels))
+    return nn.Sequential(conv1, conv2)
+
+
 def max_pool3x3(in_channels, out_channels):
     return nn.Sequential(nn.ReLU(),
                          nn.MaxPool2d(3, stride=1, padding=1))
@@ -33,12 +50,7 @@ def conv3x3(in_channels, out_channels):
 
 
 def dw_conv3x3(in_channels, out_channels):
-    return nn.Sequential(nn.ReLU(),
-                         nn.Conv2d(in_channels, in_channels, 3, padding=1, groups=out_channels, bias=False),
-                         nn.BatchNorm2d(out_channels),
-                         nn.ReLU(),
-                         nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
-                         nn.BatchNorm2d(out_channels))
+    return generate_dw_conv(in_channels, out_channels, 3)
 
 
 def dw_conv1x3(in_channels, out_channels):
@@ -60,12 +72,7 @@ def conv5x5(in_channels, out_channels):
 
 
 def dw_conv5x5(in_channels, out_channels):
-    return nn.Sequential(nn.ReLU(),
-                         nn.Conv2d(in_channels, in_channels, 5, padding=2, groups=out_channels, bias=False),
-                         nn.BatchNorm2d(out_channels),
-                         nn.ReLU(),
-                         nn.Conv2d(in_channels, out_channels, 1, padding=0, bias=False),
-                         nn.BatchNorm2d(out_channels))
+    return generate_dw_conv(in_channels, out_channels, 5)
 
 
 def identity(in_channels, out_channels):

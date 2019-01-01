@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from operator import itemgetter
 import sys
+import copy
 
 
 class PopulationDict(object):
@@ -9,6 +10,9 @@ class PopulationDict(object):
         self.values_dict = values_dict
         self.index_dict = index_dict
         self.i = current_index
+
+    def copy(self):
+        return PopulationDict(copy.deepcopy(self.values_dict), copy.deepcopy(self.index_dict), self.i)
 
     def __len__(self):
         return len(self.values_dict)
@@ -55,3 +59,7 @@ class PopulationDict(object):
         values_dict.update(other.values_dict)
         index_dict.update(other.index_dict)
         return PopulationDict(values_dict, index_dict, self.i)
+
+    def get_n_diff(self, other):
+        n = sum([1 for k in other.keys() if k not in list(self.keys())])
+        return n

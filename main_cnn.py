@@ -102,6 +102,7 @@ class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
 parser.add_argument('--config_file', type=str, help='location of the config file')
+parser.add_argument('--final', type=bool, help='location of the config file', default=False)
 args = parser.parse_args()
 #######################################
 # Parameters
@@ -148,7 +149,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_s
 ######################################
 ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'))
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
-                                     population_size=config.get('population_size'), min_objective=False)
+                                     population_size=config.get('population_size'), delay=config.get('delay'),
+                                     min_objective=False)
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
                     ss)
 net.to(working_device)
@@ -208,7 +210,7 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     p = cosine_annealing(epoch, 1, delay=15, end=25)
     for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
-        net.set_individual(ga.sample_child(p))
+        net.set_individual(ga.sample_child())
 
         inputs = inputs.to(working_device)
         labels = labels.to(working_device)
@@ -232,7 +234,7 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     for ind in ga.get_current_generation():
         acc = evaulte_single(ind, net, testloader, working_device)
         ga.update_current_individual_fitness(ind, acc)
-    _, _, f_max, _ = ga.update_population()
+    _, _, f_max, _, n_diff = ga.update_population()
     if f_max > best:
         print("Update Best")
         best = f_max
@@ -240,10 +242,14 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
         pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print(
-        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|'.format(epoch, (time.time() - s) / 60,
-                                                                                          running_loss / i,
-                                                                                          100 * correct / total,
-                                                                                          scheduler.get_lr()[-1]))
+        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(epoch, (
+                time.time() - s) / 60,
+                                                                                                           running_loss / i,
+                                                                                                           100 * correct / total,
+                                                                                                           scheduler.get_lr()[
+                                                                                                               -1],
+                                                                                                           n_diff))
+    ra.add_epoch_result('N', n_diff)
     ra.add_epoch_result('Annealing', p)
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)

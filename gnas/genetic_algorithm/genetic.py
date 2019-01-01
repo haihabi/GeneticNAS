@@ -7,7 +7,8 @@ from gnas.genetic_algorithm.ga_results import GenetricResult
 from gnas.genetic_algorithm.population_dict import PopulationDict
 
 
-def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300,
+def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=20,
+                               delay=20,
                                min_objective=True):
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
@@ -25,7 +26,7 @@ def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, po
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
                              min_objective=min_objective, generation_size=generation_size,
-                             population_size=population_size)
+                             population_size=population_size, keep_size=keep_size, delay=delay)
 
 
 class GeneticAlgorithms(object):
@@ -90,10 +91,12 @@ class GeneticAlgorithms(object):
         f_var = np.var(generation_fitness)
         f_max = np.max(generation_fitness)
         f_min = np.min(generation_fitness)
+        total_dict = self.max_dict.copy()
+        total_dict.update(self.current_dict)
+        best_max_dict = total_dict.filter_top_n(self.population_size)
 
-        self.max_dict.update(self.current_dict)
-        best_max_dict = self.max_dict.filter_top_n(self.population_size)
-        # last_max_dict = self.max_dict.filter_last_n(self.population_size - self.keep_size)
+
+        n_diff = self.max_dict.get_n_diff(best_max_dict)
         self.max_dict = best_max_dict
 
         self.current_dict = dict()
@@ -116,7 +119,7 @@ class GeneticAlgorithms(object):
         print(
             "population results | mean fitness: {:5.2f} | var fitness {:5.2f} | max fitness: {:5.2f} | min fitness {:5.2f} |".format(
                 fp_mean, fp_var, fp_max, fp_min))
-        return f_mean, f_var, f_max, f_min
+        return f_mean, f_var, f_max, f_min, n_diff
 
     def get_current_generation(self):
         return self.generation
@@ -124,8 +127,7 @@ class GeneticAlgorithms(object):
     def update_current_individual_fitness(self, individual, individual_fitness):
         self.current_dict.update({individual: individual_fitness})
 
-    def sample_child(self, p):
-        # if p > np.random.rand(1) or len(self.max_dict) == 0:
+    def sample_child(self):
         if self.i < self.delay:
             return self.population_initializer(1)[0]
         else:
@@ -135,8 +137,3 @@ class GeneticAlgorithms(object):
             couples = choices(population=population, weights=p, k=2)
             child = self.cross_over_function(couples[0], couples[1])
             return self.mutation_function(child)
-
-            # couple = np.random.randint(0, min(self.generation_size, len(self.max_dict)), 2)  # random select a couple
-            # population = list(self.max_dict.keys())
-            # child = self.cross_over_function(population[couple[0]], population[couple[1]])
-            # return self.mutation_function(child)
