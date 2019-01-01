@@ -3,114 +3,31 @@ import torch.nn as nn
 import torch.onnx
 from models import model_cnn
 import gnas
-from gnas.genetic_algorithm.annealing_functions import cosine_annealing
 import torch
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
-import math
 import os
 import pickle
 import datetime
 from config import default_config, save_config, load_config
 import argparse
-import numpy as np
+from cnn_utils import CosineAnnealingLR,Cutout
 
-
-class Cutout(object):
-    """Randomly mask out one or more patches from an image.
-    Args:
-        n_holes (int): Number of patches to cut out of each image.
-        length (int): The length (in pixels) of each square patch.
-    """
-
-    def __init__(self, n_holes, length):
-        self.n_holes = n_holes
-        self.length = length
-
-    def __call__(self, img):
-        """
-        Args:
-            img (Tensor): Tensor image of size (C, H, W).
-        Returns:
-            Tensor: Image with n_holes of dimension length x length cut out of it.
-        """
-        h = img.size(1)
-        w = img.size(2)
-
-        mask = np.ones((h, w), np.float32)
-
-        for n in range(self.n_holes):
-            y = np.random.randint(h)
-            x = np.random.randint(w)
-
-            y1 = np.clip(y - self.length // 2, 0, h)
-            y2 = np.clip(y + self.length // 2, 0, h)
-            x1 = np.clip(x - self.length // 2, 0, w)
-            x2 = np.clip(x + self.length // 2, 0, w)
-
-            mask[y1: y2, x1: x2] = 0.
-
-        mask = torch.from_numpy(mask)
-        mask = mask.expand_as(img)
-        img = img * mask
-
-        return img
-
-
-class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
-    r"""Set the learning rate of each parameter group using a cosine annealing
-    schedule, where :math:`\eta_{max}` is set to the initial lr and
-    :math:`T_{cur}` is the number of epochs since the last restart in SGDR:
-
-    .. math::
-
-        \eta_t = \eta_{min} + \frac{1}{2}(\eta_{max} - \eta_{min})(1 +
-        \cos(\frac{T_{cur}}{T_{max}}\pi))
-
-    When last_epoch=-1, sets initial lr as lr.
-
-    It has been proposed in
-    `SGDR: Stochastic Gradient Descent with Warm Restarts`_. Note that this only
-    implements the cosine annealing part of SGDR, and not the restarts.
-
-    Args:
-        optimizer (Optimizer): Wrapped optimizer.
-        T_max (int): Maximum number of iterations.
-        eta_min (float): Minimum learning rate. Default: 0.
-        last_epoch (int): The index of last epoch. Default: -1.
-
-    .. _SGDR\: Stochastic Gradient Descent with Warm Restarts:
-        https://arxiv.org/abs/1608.03983
-    """
-
-    def __init__(self, optimizer, T_max, T_mul, eta_min=0, last_epoch=-1):
-        self.T_max = T_max
-        self.T_mul = T_mul
-        self.eta_min = eta_min
-        super(CosineAnnealingLR, self).__init__(optimizer, last_epoch)
-
-    def get_lr(self):
-        lr = [self.eta_min + (base_lr - self.eta_min) *
-              (1 + math.cos(math.pi * self.last_epoch / self.T_max)) / 2
-              for base_lr in self.base_lrs]
-        if self.last_epoch != 0 and self.last_epoch % self.T_max == 0:
-            self.T_max = self.T_mul * self.T_max
-            self.last_epoch = 0
-        return lr
 
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
-parser.add_argument('--config_file', type=str, help='location of the config file')
-parser.add_argument('--final', type=bool, help='location of the config file', default=False)
+parser.add_argument('--log_dir', type=str, help='location of the config file')
 args = parser.parse_args()
+
+config_file=os.path.join(args.log_dir,'config.json')
+ind_file=os.path.join(args.log_dir,'best_individual.pickle')
 #######################################
 # Parameters
 #######################################
 config = default_config()
-if args.config_file is not None:
-    print("Loading config file:" + args.config_file)
-    config.update(load_config(args.config_file))
+print("Loading config file:" + config_file)
+config.update(load_config(config_file))
 print(config)
 #######################################
 # Search Working Device
@@ -193,12 +110,13 @@ def evaulte_single(input_individual, input_model, data_loader, device):
             correct += (predicted == labels).sum().item()
     return 100 * correct / total
 
-
+ind=pickle.load(open(ind_file, "rb"))
 ##################################################
 # Start Epochs
 ##################################################
 ra = gnas.ResultAppender()
 best = 0
+net.set_individual(individual=ind)
 for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple times
     # print(epoch)
     running_loss = 0.0
@@ -207,11 +125,9 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     scheduler.step()
     s = time.time()
     net = net.train()
-    p = cosine_annealing(epoch, 1, delay=15, end=25)
+
     for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
-        net.set_individual(ga.sample_child())
-
         inputs = inputs.to(working_device)
         labels = labels.to(working_device)
 
@@ -227,34 +143,29 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         loss.backward()  # backward
 
         optimizer.step()  # optimize
-
         # print statistics
         running_loss += loss.item()
 
-    for ind in ga.get_current_generation():
-        acc = evaulte_single(ind, net, testloader, working_device)
-        ga.update_current_individual_fitness(ind, acc)
-    _, _, f_max, _, n_diff = ga.update_population()
-    if f_max > best:
+
+    acc = evaulte_single(ind, net, testloader, working_device)
+
+    if acc > best:
         print("Update Best")
-        best = f_max
+        best = acc
         torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
-        gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
-        pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print(
-        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(epoch, (
+        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|Val: {:2.3f}%|LR: {:2.3f}|'.format(epoch, (
                 time.time() - s) / 60,
                                                                                                            running_loss / i,
-                                                                                                           100 * correct / total,
+                                                                                                           100 * correct / total,acc,
                                                                                                            scheduler.get_lr()[
-                                                                                                               -1],
-                                                                                                           n_diff))
-    ra.add_epoch_result('N', n_diff)
-    ra.add_epoch_result('Annealing', p)
+                                                                                                               -1]))
+
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)
     ra.add_epoch_result('Training Accuracy', 100 * correct / total)
-    ra.add_result('Fitness', ga.ga_result.fitness_list)
+    ra.add_epoch_result('Validation Accuracy', acc)
+
     ra.add_result('Fitness-Population', ga.ga_result.fitness_full_list)
     ra.save_result(log_dir)
 
