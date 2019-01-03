@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.onnx
 from models import model_cnn
 import gnas
-from gnas.genetic_algorithm.annealing_functions import cosine_annealing
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -14,11 +13,7 @@ import pickle
 import datetime
 from config import default_config, save_config, load_config
 import argparse
-from cnn_utils import CosineAnnealingLR,Cutout
-
-
-
-
+from cnn_utils import CosineAnnealingLR, Cutout
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
 parser.add_argument('--config_file', type=str, help='location of the config file')
@@ -69,7 +64,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_s
 ######################################
 # Config model and search space
 ######################################
-ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'),config.get('drop_path_keep_prob'))
+ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'), config.get('drop_path_keep_prob'))
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), delay=config.get('delay'),
                                      min_objective=False)
@@ -86,7 +81,7 @@ optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum
 # Select Learning schedule
 #####################################
 if config.get('LRType') == 'CosineAnnealingLR':
-    scheduler = CosineAnnealingLR(optimizer, 10, 2, 0.005)
+    scheduler = CosineAnnealingLR(optimizer, 10, 2, config.get('lr_min'))
 else:
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
                                                [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
@@ -115,6 +110,7 @@ def evaulte_single(input_individual, input_model, data_loader, device):
             correct += (predicted == labels).sum().item()
     return 100 * correct / total
 
+
 #######################################
 # Load Indvidual
 #######################################
@@ -138,7 +134,7 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     net = net.train()
     for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
-        if not args.final:net.set_individual(ga.sample_child())
+        if not args.final: net.set_individual(ga.sample_child())
 
         inputs = inputs.to(working_device)
         labels = labels.to(working_device)
@@ -161,14 +157,14 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
 
     if args.final:
         f_max = evaulte_single(ind, net, testloader, working_device)
-        n_diff=0
+        n_diff = 0
     else:
-        s0=time.time()
+        s0 = time.time()
         for ind in ga.get_current_generation():
             acc = evaulte_single(ind, net, testloader, working_device)
             ga.update_current_individual_fitness(ind, acc)
         _, _, f_max, _, n_diff = ga.update_population()
-        print(time.time()-s0)
+        print(time.time() - s0)
     if f_max > best:
         print("Update Best")
         best = f_max
@@ -177,15 +173,16 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
             gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
             pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print(
-        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|Validation Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(epoch, (
-                time.time() - s) / 60,
-                                                                                                           running_loss / i,
-                                                                                                           100 * correct / total,f_max,
-                                                                                                           scheduler.get_lr()[
-                                                                                                               -1],
-                                                                                                           n_diff))
+        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|Validation Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(
+            epoch, (
+                           time.time() - s) / 60,
+                   running_loss / i,
+                   100 * correct / total, f_max,
+            scheduler.get_lr()[
+                -1],
+            n_diff))
     ra.add_epoch_result('N', n_diff)
-    ra.add_epoch_result('Validation Accuracy',f_max)
+    ra.add_epoch_result('Validation Accuracy', f_max)
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)
     ra.add_epoch_result('Training Accuracy', 100 * correct / total)

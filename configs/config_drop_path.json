@@ -1,0 +1,18 @@
+{
+  "batch_size": 144,
+  "n_epochs": 630,
+  "n_blocks": 2,
+  "n_nodes": 5,
+  "n_channels": 36,
+  "generation_size": 20,
+  "population_size": 60,
+  "learning_rate": 0.05,
+  "lr_min": 0.0001,
+  "weight_decay": 0.0002,
+  "delay": 10,
+  "dropout": 0.2,
+  "drop_path_keep_prob": 0.6,
+  "LRType": "CosineAnnealingLR",
+  "num_class": 10,
+  "momentum": 0.9
+}

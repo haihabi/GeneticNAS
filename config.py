@@ -23,10 +23,11 @@ def default_config():
             'generation_size': 20,
             'population_size': 60,
             'learning_rate': 0.1,
+            'lr_min': 0.0001,
             'weight_decay': 0.0001,
             'delay': 10,
             'dropout': 0.0,
-            'drop_path_keep_prob':1.0,
+            'drop_path_keep_prob': 1.0,
             'LRType': 'CosineAnnealingLR',
             'num_class': 10,
             'momentum': 0.9}
