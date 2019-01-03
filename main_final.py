@@ -12,16 +12,14 @@ import pickle
 import datetime
 from config import default_config, save_config, load_config
 import argparse
-from cnn_utils import CosineAnnealingLR,Cutout
-
-
+from cnn_utils import CosineAnnealingLR, Cutout
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
 parser.add_argument('--log_dir', type=str, help='location of the config file')
 args = parser.parse_args()
 
-config_file=os.path.join(args.log_dir,'config.json')
-ind_file=os.path.join(args.log_dir,'best_individual.pickle')
+config_file = os.path.join(args.log_dir, 'config.json')
+ind_file = os.path.join(args.log_dir, 'best_individual.pickle')
 #######################################
 # Parameters
 #######################################
@@ -69,6 +67,7 @@ ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_
                                      population_size=config.get('population_size'), delay=config.get('delay'),
                                      min_objective=False)
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
+                    0.8,
                     ss)
 net.to(working_device)
 ######################################
@@ -110,7 +109,8 @@ def evaulte_single(input_individual, input_model, data_loader, device):
             correct += (predicted == labels).sum().item()
     return 100 * correct / total
 
-ind=pickle.load(open(ind_file, "rb"))
+
+ind = pickle.load(open(ind_file, "rb"))
 ##################################################
 # Start Epochs
 ##################################################
@@ -146,7 +146,6 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         # print statistics
         running_loss += loss.item()
 
-
     acc = evaulte_single(ind, net, testloader, working_device)
 
     if acc > best:
@@ -156,10 +155,11 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     print(
         '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|Val: {:2.3f}%|LR: {:2.3f}|'.format(epoch, (
                 time.time() - s) / 60,
-                                                                                                           running_loss / i,
-                                                                                                           100 * correct / total,acc,
-                                                                                                           scheduler.get_lr()[
-                                                                                                               -1]))
+                                                                                                        running_loss / i,
+                                                                                                        100 * correct / total,
+                                                                                                        acc,
+                                                                                                        scheduler.get_lr()[
+                                                                                                            -1]))
 
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)

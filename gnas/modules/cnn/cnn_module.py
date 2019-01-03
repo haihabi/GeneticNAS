@@ -9,13 +9,14 @@ from gnas.modules.cnn.se_block import SEBlock
 
 
 class CnnSearchModule(nn.Module):
-    def __init__(self, n_channels, ss, individual_index=0):
+    def __init__(self, n_channels, ss, drop_path_keep_prob=0, individual_index=0):
         super(CnnSearchModule, self).__init__()
 
         self.ss = ss
         self.n_channels = n_channels
         self.config_dict = {'n_channels': n_channels}
-        self.sub_graph_module = SubGraphModule(ss, self.config_dict, individual_index=individual_index)
+        self.sub_graph_module = SubGraphModule(ss, self.config_dict, drop_path_keep_prob=drop_path_keep_prob,
+                                               individual_index=individual_index)
 
         # self.end_block = nn.Sequential(nn.ReLU(),
         #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
