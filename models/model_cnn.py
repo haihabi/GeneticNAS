@@ -5,9 +5,9 @@ import torch
 
 
 class RepeatBlock(nn.Module):
-    def __init__(self, n_blocks, n_channels, ss, drop_path_keep_prob=0, individual_index=0):
+    def __init__(self, n_blocks, n_channels, ss,individual_index=0):
         super(RepeatBlock, self).__init__()
-        self.block_list = [gnas.modules.CnnSearchModule(n_channels, ss, drop_path_keep_prob=drop_path_keep_prob,
+        self.block_list = [gnas.modules.CnnSearchModule(n_channels, ss,
                                                         individual_index=individual_index) for i in
                            range(n_blocks)]
         [self.add_module('block_' + str(i), n) for i, n in enumerate(self.block_list)]
@@ -24,12 +24,12 @@ class RepeatBlock(nn.Module):
 
 
 class Net(nn.Module):
-    def __init__(self, n_blocks, n_channels, n_classes, dropout, drop_path_keep_prob, ss):
+    def __init__(self, n_blocks, n_channels, n_classes, dropout, ss):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, n_channels, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
 
-        self.block_1 = RepeatBlock(n_blocks, n_channels, ss, drop_path_keep_prob=drop_path_keep_prob,
+        self.block_1 = RepeatBlock(n_blocks, n_channels, ss,
                                    individual_index=1)
 
         self.avg = nn.AvgPool2d(2)
@@ -40,8 +40,8 @@ class Net(nn.Module):
         self.bn2_prev = nn.BatchNorm2d(2 * n_channels)
         # self
 
-        self.block_2_reduce = gnas.modules.CnnSearchModule(2 * n_channels, ss, drop_path_keep_prob, individual_index=0)
-        self.block_2 = RepeatBlock(n_blocks, 2 * n_channels, ss, drop_path_keep_prob=drop_path_keep_prob,
+        self.block_2_reduce = gnas.modules.CnnSearchModule(2 * n_channels, ss, individual_index=0)
+        self.block_2 = RepeatBlock(n_blocks, 2 * n_channels, ss,
                                    individual_index=1)
 
         self.conv3 = nn.Conv2d(2 * n_channels, 4 * n_channels, 1, stride=1, padding=1, bias=False)
@@ -50,8 +50,8 @@ class Net(nn.Module):
         self.conv3_prev = nn.Conv2d(2 * n_channels, 4 * n_channels, 1, stride=1, padding=1, bias=False)
         self.bn3_prev = nn.BatchNorm2d(4 * n_channels)
 
-        self.block_3_reduce = gnas.modules.CnnSearchModule(4 * n_channels, ss, drop_path_keep_prob, individual_index=0)
-        self.block_3 = RepeatBlock(n_blocks, 4 * n_channels, ss, drop_path_keep_prob=drop_path_keep_prob,
+        self.block_3_reduce = gnas.modules.CnnSearchModule(4 * n_channels, ss, individual_index=0)
+        self.block_3 = RepeatBlock(n_blocks, 4 * n_channels, ss,
                                    individual_index=1)
 
         self.relu = nn.ReLU()

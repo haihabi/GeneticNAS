@@ -7,15 +7,15 @@ from cnn_utils import DropPath
 
 
 class SubGraphModule(nn.Module):
-    def __init__(self, search_space, config_dict, drop_path_keep_prob=0, individual_index=0):
+    def __init__(self, search_space, config_dict, individual_index=0):
         super(SubGraphModule, self).__init__()
         self.ss = search_space
         self.config_dict = config_dict
         self.individual_index = individual_index
         if self.ss.single_block:
-            self.node_modules = [DropPath(get_module(oc, config_dict), drop_path_keep_prob) for oc in self.ss.ocl]
+            self.node_modules = [get_module(oc, config_dict)for oc in self.ss.ocl]
         else:
-            self.node_modules = [DropPath(get_module(oc, config_dict), drop_path_keep_prob) for oc in
+            self.node_modules = [get_module(oc, config_dict)for oc in
                                  self.ss.ocl[individual_index]]
         # print(len(self.node_modules))
         [self.add_module('Node' + str(i), n) for i, n in enumerate(self.node_modules)]

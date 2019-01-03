@@ -1,7 +1,7 @@
 import torch.nn as nn
 from gnas.modules.module_generator import generate_non_linear, generate_op
 from gnas.modules.rnn.weight_drop import WeightDrop
-
+from gnas.modules.drop_path import DropPath
 
 class RnnInputNodeModule(nn.Module):
     def __init__(self, node_config, config_dict):
@@ -79,7 +79,9 @@ class ConvNodeModule(nn.Module):
 
         self.conv_module = []
         for j in range(node_config.get_n_inputs()):
-            self.conv_module.append(generate_op(self.nc.op_list, self.n_channels, self.n_channels))
+            # DropPath(op, node_config.drop_path)
+            op_list=[op for op in generate_op(self.nc.op_list, self.n_channels, self.n_channels)]
+            self.conv_module.append(op_list)
             [self.add_module('conv_op_' + str(i) + '_in_' + str(j), m) for i, m in enumerate(self.conv_module[-1])]
 
         self.non_linear_a = None

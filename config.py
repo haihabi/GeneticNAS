@@ -15,6 +15,7 @@ def load_config(path_dir):
 
 def default_config():
     return {'batch_size': 128,
+            'batch_size_val': 1024,
             'n_epochs': 310,
             'n_blocks': 2,
             'n_nodes': 5,
@@ -25,6 +26,7 @@ def default_config():
             'weight_decay': 0.0001,
             'delay': 10,
             'dropout': 0.0,
+            'drop_path_keep_prob':1.0,
             'LRType': 'CosineAnnealingLR',
             'num_class': 10,
             'momentum': 0.9}

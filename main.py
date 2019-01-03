@@ -22,8 +22,10 @@ from cnn_utils import CosineAnnealingLR,Cutout
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
 parser.add_argument('--config_file', type=str, help='location of the config file')
+parser.add_argument('--search_dir', type=str, help='the log dir of the search')
 parser.add_argument('--final', type=bool, help='location of the config file', default=False)
 args = parser.parse_args()
+
 #######################################
 # Parameters
 #######################################
@@ -62,12 +64,12 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch
 
 testset = torchvision.datasets.CIFAR10(root='./dataset', train=False,
                                        download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size'),
+testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size_val'),
                                          shuffle=False, num_workers=4)
 ######################################
 # Config model and search space
 ######################################
-ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'))
+ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'),config.get('drop_path_keep_prob'))
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), delay=config.get('delay'),
                                      min_objective=False)
@@ -113,12 +115,19 @@ def evaulte_single(input_individual, input_model, data_loader, device):
             correct += (predicted == labels).sum().item()
     return 100 * correct / total
 
-
+#######################################
+# Load Indvidual
+#######################################
+if args.final:
+    ind_file = os.path.join(args.search_dir, 'best_individual.pickle')
+    ind = pickle.load(open(ind_file, "rb"))
+    net.set_individual(ind)
 ##################################################
 # Start Epochs
 ##################################################
 ra = gnas.ResultAppender()
 best = 0
+
 for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple times
     # print(epoch)
     running_loss = 0.0
@@ -127,10 +136,9 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     scheduler.step()
     s = time.time()
     net = net.train()
-    p = cosine_annealing(epoch, 1, delay=15, end=25)
     for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
-        net.set_individual(ga.sample_child())
+        if not args.final:net.set_individual(ga.sample_child())
 
         inputs = inputs.to(working_device)
         labels = labels.to(working_device)
@@ -151,31 +159,39 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         # print statistics
         running_loss += loss.item()
 
-    for ind in ga.get_current_generation():
-        acc = evaulte_single(ind, net, testloader, working_device)
-        ga.update_current_individual_fitness(ind, acc)
-    _, _, f_max, _, n_diff = ga.update_population()
+    if args.final:
+        f_max = evaulte_single(ind, net, testloader, working_device)
+        n_diff=0
+    else:
+        s0=time.time()
+        for ind in ga.get_current_generation():
+            acc = evaulte_single(ind, net, testloader, working_device)
+            ga.update_current_individual_fitness(ind, acc)
+        _, _, f_max, _, n_diff = ga.update_population()
+        print(time.time()-s0)
     if f_max > best:
         print("Update Best")
         best = f_max
         torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
-        gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
-        pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
+        if not args.final:
+            gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
+            pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
     print(
-        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(epoch, (
+        '|Epoch: {:2d}|Time: {:2.3f}|Loss:{:2.3f}|Accuracy: {:2.3f}%|Validation Accuracy: {:2.3f}%|LR: {:2.3f}|N Change : {:2d}|'.format(epoch, (
                 time.time() - s) / 60,
                                                                                                            running_loss / i,
-                                                                                                           100 * correct / total,
+                                                                                                           100 * correct / total,f_max,
                                                                                                            scheduler.get_lr()[
                                                                                                                -1],
                                                                                                            n_diff))
     ra.add_epoch_result('N', n_diff)
-    ra.add_epoch_result('Annealing', p)
+    ra.add_epoch_result('Validation Accuracy',f_max)
     ra.add_epoch_result('LR', scheduler.get_lr()[-1])
     ra.add_epoch_result('Training Loss', running_loss / i)
     ra.add_epoch_result('Training Accuracy', 100 * correct / total)
-    ra.add_result('Fitness', ga.ga_result.fitness_list)
-    ra.add_result('Fitness-Population', ga.ga_result.fitness_full_list)
+    if not args.final:
+        ra.add_result('Fitness', ga.ga_result.fitness_list)
+        ra.add_result('Fitness-Population', ga.ga_result.fitness_full_list)
     ra.save_result(log_dir)
 
 print('Finished Training')
