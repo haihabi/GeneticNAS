@@ -74,13 +74,9 @@ class ConvNodeModule(nn.Module):
         self.nc = node_config
 
         self.n_channels = config_dict.get('n_channels')
-
-        # self.nl_module = generate_non_linear(self.nc.non_linear_list)
-
         self.conv_module = []
         for j in range(node_config.get_n_inputs()):
-            # DropPath(op, node_config.drop_path)
-            op_list=[op for op in generate_op(self.nc.op_list, self.n_channels, self.n_channels)]
+            op_list=[DropPath(op, node_config.drop_path) for op in generate_op(self.nc.op_list, self.n_channels, self.n_channels)]
             self.conv_module.append(op_list)
             [self.add_module('conv_op_' + str(i) + '_in_' + str(j), m) for i, m in enumerate(self.conv_module[-1])]
 
