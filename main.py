@@ -1,6 +1,5 @@
 import time
 import torch.nn as nn
-import torch.onnx
 from models import model_cnn
 import gnas
 import torch
@@ -14,6 +13,7 @@ import datetime
 from config import default_config, save_config, load_config
 import argparse
 from cnn_utils import CosineAnnealingLR, Cutout
+from common import evaulte_single, evaulte_individual_list
 
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
 parser.add_argument('--config_file', type=str, help='location of the config file')
@@ -45,8 +45,8 @@ train_transform.transforms.append(transforms.RandomCrop(32, padding=4))
 train_transform.transforms.append(transforms.RandomHorizontalFlip())
 train_transform.transforms.append(transforms.ToTensor())
 train_transform.transforms.append(normalize)
-
-# train_transform.transforms.append(Cutout(n_holes=args.n_holes, length=args.length))
+if config.get('cutout'):
+    train_transform.transforms.append(Cutout(n_holes=config.get('n_holes'), length=config.get('length')))
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -92,24 +92,6 @@ else:
 log_dir = os.path.join('.', 'logs', datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 os.makedirs(log_dir, exist_ok=True)
 save_config(log_dir, config)
-
-
-def evaulte_single(input_individual, input_model, data_loader, device):
-    correct = 0
-    total = 0
-    input_model = input_model.eval()
-    input_model.set_individual(input_individual)
-    with torch.no_grad():
-        for data in data_loader:
-            images, labels = data
-            images = images.to(device)
-            labels = labels.to(device)
-            outputs = input_model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-    return 100 * correct / total
-
 
 #######################################
 # Load Indvidual
@@ -159,12 +141,16 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         f_max = evaulte_single(ind, net, testloader, working_device)
         n_diff = 0
     else:
-        s0 = time.time()
-        for ind in ga.get_current_generation():
-            acc = evaulte_single(ind, net, testloader, working_device)
-            ga.update_current_individual_fitness(ind, acc)
-        _, _, f_max, _, n_diff = ga.update_population()
-        print(time.time() - s0)
+        if config.get('full_dataset'):
+            for ind in ga.get_current_generation():
+                acc = evaulte_single(ind, net, testloader, working_device)
+                ga.update_current_individual_fitness(ind, acc)
+            _, _, f_max, _, n_diff = ga.update_population()
+        else:
+            for _ in range(config.get('generation_per_epoch')):
+                evaulte_individual_list(ga.get_current_generation(), ga, net, testloader, working_device)
+                _, _, f_max, _, n_diff = ga.update_population()
+
     if f_max > best:
         print("Update Best")
         best = f_max

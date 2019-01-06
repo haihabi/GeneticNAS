@@ -12,6 +12,9 @@
   "delay": 10,
   "dropout": 0.2,
   "drop_path_keep_prob": 0.6,
+  "cutout": true,
+  "n_holes": 1,
+  "length": 2,
   "LRType": "CosineAnnealingLR",
   "num_class": 10,
   "momentum": 0.9

@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 
-file_list = ["/data/projects/swat/users/haih/GNAS/logs/2019_01_01_09_45_19"]
+file_list = ["/data/projects/GNAS/logs/2019_01_03_21_00_42", "/data/projects/GNAS/logs/2019_01_06_08_48_51"]
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))
@@ -73,9 +73,14 @@ if len(file_list) == 1:
 else:
     for f in file_list:
         data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
-        fitness = np.stack(data.result_dict.get('Fitness'))
-        epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
-        plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
-        plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+        if data.result_dict.get('Fitness') is not None:
+            fitness = np.stack(data.result_dict.get('Fitness'))
+            epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
+            plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
+            plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+        else:
+            plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+            plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation')
+    plt.legend()
     plt.grid()
     plt.show()
