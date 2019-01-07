@@ -2,8 +2,16 @@ import os
 import pickle
 import numpy as np
 from matplotlib import pyplot as plt
+from config import load_config
+import pandas as pd
+from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/GNAS/logs/2019_01_03_21_00_42", "/data/projects/GNAS/logs/2019_01_06_08_48_51"]
+file_list = ["/data/projects/swat/users/haih/GNAS/logs/2019_01_06_15_11_00","/data/projects/swat/users/haih/GNAS/logs/2019_01_07_07_41_33"]
+
+
+def read_config(file_path):
+    pass
+
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))
@@ -43,7 +51,7 @@ if len(file_list) == 1:
         plt.show()
     else:
         plt.subplot(2, 3, 2)
-        plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Loss')
+        plt.plot( np.asarray(data.result_dict.get('Training Accuracy')), label='Loss')
         plt.plot(epochs, np.max(fitness, axis=1), '--', label='max fitness')
         plt.title('Loss over training set')
         plt.xlabel('Epoch')
@@ -51,19 +59,19 @@ if len(file_list) == 1:
         plt.ylabel('Accuracy[%]')
         plt.grid()
         plt.subplot(2, 3, 3)
-        plt.plot(epochs, np.asarray(data.result_dict.get('Training Loss')))
+        plt.plot( np.asarray(data.result_dict.get('Training Loss')))
         plt.title('Training Loss')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.grid()
         plt.subplot(2, 3, 4)
-        plt.plot(epochs, np.asarray(data.result_dict.get('LR')))
+        plt.plot( np.asarray(data.result_dict.get('LR')))
         plt.title('Learning Rate Progress')
         plt.xlabel('Epoch')
         plt.ylabel('Learning Rate')
         plt.grid()
         plt.subplot(2, 3, 5)
-        plt.plot(epochs, np.asarray(data.result_dict.get('N')))
+        plt.plot( np.asarray(data.result_dict.get('N')))
         plt.title('N')
         plt.xlabel('Epoch')
         plt.ylabel('Annealing')
@@ -73,11 +81,24 @@ if len(file_list) == 1:
 else:
     for f in file_list:
         data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
+        config=load_config(os.path.join(f,'config.json'))
         if data.result_dict.get('Fitness') is not None:
             fitness = np.stack(data.result_dict.get('Fitness'))
             epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
-            plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
-            plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+            if config.get('full_dataset') is None or config.get('full_dataset')==True:
+                plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
+                plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+            else:
+                window=2
+                a=np.max(fitness, axis=1)
+                n=int(a.shape[0]/2)
+                b=np.zeros(int(a.shape[0]/2))
+                for i in range(0, int(a.shape[0]/2)):
+                    b[i] = np.amax(a[2*i:2*i + window])
+                epochs = np.linspace(0, n - 1, n)
+                plt.plot(epochs, b, '*--', label='min fitness')
+                plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+                plt.plot(epochs,pd.Series(b).cummax(),label='best')
         else:
             plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
             plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation')
