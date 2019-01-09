@@ -147,16 +147,18 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
                 acc = evaulte_single(ind, net, testloader, working_device)
                 ga.update_current_individual_fitness(ind, acc)
             _, _, f_max, _, n_diff = ga.update_population()
-            best_individual=ga.best_individual
+            best_individual = ga.best_individual
         else:
-            f_max=0
+            f_max = 0
+            n_diff = 0
             for _ in range(config.get('generation_per_epoch')):
                 evaulte_individual_list(ga.get_current_generation(), ga, net, testloader, working_device)
-                _, _, v_max, _, n_diff = ga.update_population()
-                if v_max>f_max:
-                    f_max=v_max
+                _, _, v_max, _, n_d = ga.update_population()
+                n_diff += n_d
+                if v_max > f_max:
+                    f_max = v_max
                     best_individual = ga.best_individual
-            f_max = evaulte_single(best_individual, net, testloader, working_device) # evalute best
+            f_max = evaulte_single(best_individual, net, testloader, working_device)  # evalute best
     if f_max > best:
         print("Update Best")
         best = f_max

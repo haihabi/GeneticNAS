@@ -7,20 +7,21 @@ class Individual(object):
         self.mi = max_inputs
         self.ss = search_space
         # Generate config when generating individual
-        self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.get_opeartion_config(index))]
+        self.index = index
+        self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.get_opeartion_config(self.index))]
         self.code = np.concatenate(self.iv, axis=0)
 
     def get_n_op(self):
         return len(self.iv)
 
     def copy(self):
-        return Individual(self.iv, self.mi, self.ss)
+        return Individual(self.iv, self.mi, self.ss, index=self.index)
 
     def generate_node_config(self):
         return self.config_list
 
     def update_individual(self, individual_vector):
-        return Individual(individual_vector, self.mi, self.ss)
+        return Individual(individual_vector, self.mi, self.ss, index=self.index)
 
     def __eq__(self, other):
         return np.array_equal(self.code, other.code)
@@ -40,7 +41,7 @@ class MultipleBlockIndividual(object):
     def get_individual(self, index):
         return self.individual_list[index]
 
-    def generate_node_config(self, index=0):
+    def generate_node_config(self, index):
         return self.individual_list[index].generate_node_config()
 
     def update_individual(self, individual_vector):

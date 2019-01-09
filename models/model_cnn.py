@@ -3,14 +3,13 @@ import gnas
 import torch
 
 
-
-
 class RepeatBlock(nn.Module):
-    def __init__(self, n_blocks, n_channels, ss,individual_index=0,first_block=None):
+    def __init__(self, n_blocks, n_channels, ss, individual_index=0, first_block=None):
         super(RepeatBlock, self).__init__()
-        if first_block is None:first_block=individual_index
+        if first_block is None: first_block = individual_index
         self.block_list = [gnas.modules.CnnSearchModule(n_channels, ss,
-                                                        individual_index=first_block if i==0 else individual_index) for i in
+                                                        individual_index=first_block if i == 0 else individual_index)
+                           for i in
                            range(n_blocks)]
         [self.add_module('block_' + str(i), n) for i, n in enumerate(self.block_list)]
 
@@ -25,23 +24,22 @@ class RepeatBlock(nn.Module):
         [b.set_individual(individual) for b in self.block_list]
 
 
-
 class Net(nn.Module):
     def __init__(self, n_blocks, n_channels, n_classes, dropout, ss):
-        n_block_types=len(ss.ocl)
-        normal_block_index =0
+        n_block_types = len(ss.ocl)
+        normal_block_index = 0
         reduce_block_index = 0
         first_block_index = 0
-        if n_block_types>=2:
+        if n_block_types >= 2:
             normal_block_index = 1
             first_block_index = 1
-        if n_block_types==3:first_block_index=2
+        if n_block_types == 3: first_block_index = 2
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, n_channels, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_channels)
 
         self.block_1 = RepeatBlock(n_blocks, n_channels, ss,
-                                   individual_index=normal_block_index,first_block=first_block_index)
+                                   individual_index=normal_block_index, first_block=first_block_index)
 
         self.avg = nn.AvgPool2d(2)
         self.conv2 = nn.Conv2d(n_channels, 2 * n_channels, 1, stride=1, padding=1, bias=False)

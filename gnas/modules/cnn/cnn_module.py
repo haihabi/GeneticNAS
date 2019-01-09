@@ -17,7 +17,12 @@ class CnnSearchModule(nn.Module):
         self.config_dict = {'n_channels': n_channels}
         self.sub_graph_module = SubGraphModule(ss, self.config_dict,
                                                individual_index=individual_index)
+        if ss.single_block:
+            self.n_inputs = len(ss.ocl[0].inputs)
+        else:
+            self.n_inputs = len(ss.ocl[individual_index][0].inputs)
 
+        # ss.ocl[individual_index]
         # self.end_block = nn.Sequential(nn.ReLU(),
         #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
         #                                nn.BatchNorm2d(n_channels))
@@ -41,7 +46,10 @@ class CnnSearchModule(nn.Module):
             w.data.uniform_(-stdv, stdv)
 
     def forward(self, inputs_tensor, bypass_input):
-        net = self.sub_graph_module(inputs_tensor, bypass_input)
+        if self.n_inputs == 1:
+            net = self.sub_graph_module(inputs_tensor)
+        elif self.n_inputs == 2:
+            net = self.sub_graph_module(inputs_tensor, bypass_input)
 
         net = torch.cat([net[i] for i in self.sub_graph_module.avg_index if i > 1], dim=1)
         w = torch.cat([self.weights[i - 2] for i in self.sub_graph_module.avg_index if i > 1], dim=1)

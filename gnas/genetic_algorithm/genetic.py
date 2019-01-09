@@ -9,12 +9,14 @@ from gnas.genetic_algorithm.population_dict import PopulationDict
 
 def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=20,
                                delay=20,
-                               min_objective=True):
+                               min_objective=True, mutation_p=None):
+    if mutation_p is None: mutation_p = 1 / search_space.n_elements
+
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
 
     def mutation_function(x):
-        return individual_flip_mutation(x, 1 / search_space.n_elements)
+        return individual_flip_mutation(x, mutation_p)
 
     def cross_over_function(x0, x1):
         return individual_uniform_crossover(x0, x1)
@@ -94,7 +96,6 @@ class GeneticAlgorithms(object):
         total_dict = self.max_dict.copy()
         total_dict.update(self.current_dict)
         best_max_dict = total_dict.filter_top_n(self.population_size)
-
 
         n_diff = self.max_dict.get_n_diff(best_max_dict)
         self.max_dict = best_max_dict

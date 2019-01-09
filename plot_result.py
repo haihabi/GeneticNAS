@@ -6,13 +6,13 @@ from config import load_config
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/swat/users/haih/GNAS/logs/2019_01_08_09_27_53","/data/projects/swat/users/haih/GNAS/logs/2019_01_08_15_02_16"]
+file_list = ["/data/projects/GNAS/logs/2019_01_07_22_09_57","/data/projects/GNAS/logs/2019_01_08_21_42_45","/data/projects/GNAS/logs/2019_01_01_08_25_37"]
 
 
 def read_config(file_path):
     pass
 
-if len(file_list) == 1:
+if len(file_list) == 1 and False:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     fitness = np.stack(data.result_dict.get('Fitness'))
     mode = False
@@ -98,7 +98,7 @@ else:
                 epochs = np.linspace(0, n - 1, n)
                 plt.plot(epochs, b, '*--', label='min fitness')
                 plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
-                plt.plot(epochs,pd.Series(b).cummax(),label='best')
+                plt.plot(epochs,np.asarray(data.result_dict.get('Best')),label='best')
         else:
             plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
             plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation')

@@ -15,7 +15,7 @@ def load_config(path_dir):
 
 def default_config():
     return {'batch_size': 128,
-            'batch_size_val': 1024,
+            'batch_size_val': 1000,
             'n_epochs': 310,
             'n_blocks': 2,
             'n_block_type':2,

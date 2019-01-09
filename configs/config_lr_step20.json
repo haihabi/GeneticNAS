@@ -1,9 +1,9 @@
 {
   "batch_size": 256,
-  "batch_size_val": 1024,
+  "batch_size_val": 1000,
   "n_epochs": 310,
   "n_blocks": 1,
-  "n_block_type": 2,
+  "n_block_type": 3,
   "n_nodes": 5,
   "n_channels": 20,
   "generation_size": 20,
@@ -14,12 +14,12 @@
   "lr_min": 0.002,
   "weight_decay": 0.0001,
   "delay": 10,
-  "dropout": 0.2,
+  "LRType": "MultiStepLR",
+  "dropout": 0.0,
   "drop_path_keep_prob": 1.0,
-  "cutout": true,
+  "cutout": false,
   "n_holes": 1,
   "length": 2,
-  "LRType": "MultiStepLR",
   "num_class": 10,
   "momentum": 0.9
 }

@@ -4,7 +4,7 @@ from gnas.genetic_algorithm.cross_over import uniform_crossover, select_crossove
 
 def _individual_uniform_crossover(individual_a: Individual, individual_b: Individual) -> Individual:
     res = [uniform_crossover(a, b) for a, b in zip(individual_a.iv, individual_b.iv)]
-    return Individual(res, individual_a.mi, individual_a.ss)
+    return Individual(res, individual_a.mi, individual_a.ss, index=individual_a.index)
 
 
 def individual_uniform_crossover(individual_a, individual_b):

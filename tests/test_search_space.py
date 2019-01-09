@@ -99,24 +99,26 @@ class TestSearchSpace(unittest.TestCase):
     def test_plot_individual(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_cnn_search_space(5)
+        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNSingleCell)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     def test_plot_individual_dual(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_cnn_search_space_dual(5)
+        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNDualCell)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
-    #     if os.path.isfile(os.path.join(current_path, 'graph.png')):
-    #         os.remove(os.path.join(current_path, 'graph.png'))
-    #     individual = ss.generate_individual()
-    #     draw_network(ss, individual, os.path.join(current_path, 'graph.png'))
+    def test_plot_individual_triple(self):
+        current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNTripleCell)
+        ind = ss.generate_individual()
+        draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     def _test_individual(self, individual, n_nodes):
-        individual_flip_mutation(individual,0.2)
+        individual_flip_mutation(individual, 0.2)
         if isinstance(individual, Individual):
             self.assertTrue(len(individual.iv) == n_nodes)
             for c in individual.iv:
@@ -127,7 +129,7 @@ class TestSearchSpace(unittest.TestCase):
             individual.generate_node_config()
         else:
             [self.assertTrue(len(ind.iv) == n_nodes[i]) for i, ind in enumerate(individual.individual_list)]
-            individual.generate_node_config()
+            individual.generate_node_config(0)
 
 
 if __name__ == '__main__':
