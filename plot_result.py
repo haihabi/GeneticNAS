@@ -6,7 +6,7 @@ from config import load_config
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/swat/users/haih/GNAS/logs/2019_01_06_15_11_00","/data/projects/swat/users/haih/GNAS/logs/2019_01_07_07_41_33"]
+file_list = ["/data/projects/swat/users/haih/GNAS/logs/2019_01_08_09_27_53","/data/projects/swat/users/haih/GNAS/logs/2019_01_08_15_02_16"]
 
 
 def read_config(file_path):
@@ -89,12 +89,12 @@ else:
                 plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
                 plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
             else:
-                window=2
+                window=config.get('generation_per_epoch')
                 a=np.max(fitness, axis=1)
-                n=int(a.shape[0]/2)
-                b=np.zeros(int(a.shape[0]/2))
-                for i in range(0, int(a.shape[0]/2)):
-                    b[i] = np.amax(a[2*i:2*i + window])
+                n=int(a.shape[0]/window)
+                b=np.zeros(int(a.shape[0]/window))
+                for i in range(0, int(a.shape[0]/window)):
+                    b[i] = np.amax(a[window*i:window*i + window])
                 epochs = np.linspace(0, n - 1, n)
                 plt.plot(epochs, b, '*--', label='min fitness')
                 plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')

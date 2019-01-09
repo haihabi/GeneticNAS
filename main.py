@@ -64,7 +64,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_s
 ######################################
 # Config model and search space
 ######################################
-ss = gnas.get_enas_cnn_search_space_dual(config.get('n_nodes'), config.get('drop_path_keep_prob'))
+n_cell_type=gnas.SearchSpaceType(config.get('n_block_type')-1)
+ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), config.get('drop_path_keep_prob'),n_cell_type)
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), delay=config.get('delay'),
                                      min_objective=False)

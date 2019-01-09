@@ -18,6 +18,7 @@ def default_config():
             'batch_size_val': 1024,
             'n_epochs': 310,
             'n_blocks': 2,
+            'n_block_type':2,
             'n_nodes': 5,
             'n_channels': 20,
             'generation_size': 20,
