@@ -47,11 +47,11 @@ class RnnNodeConfig(object):
 
 
 class CnnNodeConfig(object):
-    def __init__(self, node_id, inputs: list, op_list, drop_path=0):
+    def __init__(self, node_id, inputs: list, op_list, drop_path_control):
         self.node_id = node_id
         self.inputs = inputs
         self.op_list = op_list
-        self.drop_path = drop_path
+        self.drop_path_control = drop_path_control
 
     def max_values_vector(self, max_inputs):
         max_inputs = len(self.inputs)

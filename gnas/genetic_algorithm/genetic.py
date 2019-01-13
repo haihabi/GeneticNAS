@@ -95,7 +95,11 @@ class GeneticAlgorithms(object):
         f_min = np.min(generation_fitness)
         total_dict = self.max_dict.copy()
         total_dict.update(self.current_dict)
-        best_max_dict = total_dict.filter_top_n(self.population_size)
+
+        best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size)
+        if self.keep_size > 0:
+            last_dict = total_dict.filter_last_n(self.keep_size)
+            best_max_dict = best_max_dict.merge(last_dict)
 
         n_diff = self.max_dict.get_n_diff(best_max_dict)
         self.max_dict = best_max_dict

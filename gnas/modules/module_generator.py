@@ -1,4 +1,5 @@
 from torch import nn
+from gnas.modules.identity import Identity
 
 __nl_dict__ = {'Tanh': nn.Tanh,
                'ReLU': nn.ReLU6,
@@ -6,14 +7,6 @@ __nl_dict__ = {'Tanh': nn.Tanh,
                'SELU': nn.SELU,
                'LeakyReLU': nn.LeakyReLU,
                'Sigmoid': nn.Sigmoid}
-
-
-class Identity(nn.Module):
-    def __init__(self):
-        super(Identity, self).__init__()
-
-    def forward(self, x):
-        return x
 
 
 def generate_dw_conv(in_channels, out_channels, kernel):

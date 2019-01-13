@@ -64,10 +64,12 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_s
 ######################################
 # Config model and search space
 ######################################
-n_cell_type=gnas.SearchSpaceType(config.get('n_block_type')-1)
-ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), config.get('drop_path_keep_prob'),n_cell_type)
+n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
+dp_control = gnas.DropPathControl(config.get('drop_path_keep_prob'))
+ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), delay=config.get('delay'),
+                                     keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
                                      min_objective=False)
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
                     ss)
@@ -115,6 +117,8 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
     scheduler.step()
     s = time.time()
     net = net.train()
+    if epoch == config.get('drop_path_start_epoch'):
+        dp_control.enable()
     for i, (inputs, labels) in enumerate(trainloader, 0):
         # get the inputs
         if not args.final: net.set_individual(ga.sample_child())

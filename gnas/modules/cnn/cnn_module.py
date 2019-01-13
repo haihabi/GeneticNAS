@@ -6,10 +6,11 @@ from gnas.search_space.individual import Individual
 from gnas.modules.sub_graph_module import SubGraphModule
 from torch.nn import functional as F
 from gnas.modules.cnn.se_block import SEBlock
+from gnas.modules.identity import Identity
 
 
 class CnnSearchModule(nn.Module):
-    def __init__(self, n_channels, ss, individual_index=0):
+    def __init__(self, n_channels, ss, individual_index=0, se_block=True):
         super(CnnSearchModule, self).__init__()
 
         self.ss = ss
@@ -21,13 +22,11 @@ class CnnSearchModule(nn.Module):
             self.n_inputs = len(ss.ocl[0].inputs)
         else:
             self.n_inputs = len(ss.ocl[individual_index][0].inputs)
+        if se_block:
+            self.se_block = SEBlock(n_channels, 8)
+        else:
+            self.se_block = Identity()
 
-        # ss.ocl[individual_index]
-        # self.end_block = nn.Sequential(nn.ReLU(),
-        #                                nn.Conv2d(len(ss.ocl) * n_channels, n_channels, 1),
-        #                                nn.BatchNorm2d(n_channels))
-
-        self.se_block = SEBlock(n_channels, 8)
         self.bn = nn.BatchNorm2d(n_channels)
         self.relu = nn.ReLU()
         if self.ss.single_block:

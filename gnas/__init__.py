@@ -1,4 +1,5 @@
-from gnas.search_space.factory import  get_enas_cnn_search_space,SearchSpaceType
+from gnas.search_space.factory import get_enas_cnn_search_space, SearchSpaceType
+from gnas.modules.drop_path import DropPathControl
 from gnas.genetic_algorithm.genetic import genetic_algorithm_searcher
 from gnas.common.result import ResultAppender
 from gnas import modules
