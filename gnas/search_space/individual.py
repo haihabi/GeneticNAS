@@ -11,6 +11,9 @@ class Individual(object):
         self.config_list = [oc.parse_config(iv) for iv, oc in zip(self.iv, self.ss.get_opeartion_config(self.index))]
         self.code = np.concatenate(self.iv, axis=0)
 
+    def get_length(self):
+        return len(self.code)
+
     def get_n_op(self):
         return len(self.iv)
 

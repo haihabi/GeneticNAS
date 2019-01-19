@@ -6,16 +6,15 @@ from config import load_config
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/GNAS/logs/2019_01_10_00_01_59", "/data/projects/GNAS/logs/2019_01_10_22_59_14",
-             "/data/projects/GNAS/logs/2019_01_11_08_50_49", "/data/projects/GNAS/logs/2019_01_11_15_07_07",
-             "/data/projects/GNAS/logs/2019_01_11_16_43_28", "/data/projects/GNAS/logs/2019_01_12_23_37_42"]
+file_list = ["/data/projects/GNAS/logs/2019_01_19_12_16_58",
+             "/data/projects/GNAS/logs/2019_01_17_23_13_11"]
 
 
 def read_config(file_path):
     pass
 
 
-if len(file_list) == 1:
+if len(file_list) == 1 and False:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     config = load_config(os.path.join(file_list[0], 'config.json'))
     fitness = np.stack(data.result_dict.get('Fitness'))
@@ -93,30 +92,37 @@ else:
     #########################
     # Plot Validation
     #########################
+    plt.subplot(1, 2, 1)
+    for i, f in enumerate(file_list):
+        data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
+        plt.plot(np.asarray(data.result_dict.get('Best')), label=str_list[i])
+        # data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
+        # config = load_config(os.path.join(f, 'config.json'))
+        # if data.result_dict.get('Fitness') is not None:
+        #     fitness = np.stack(data.result_dict.get('Fitness'))
+        #     epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
+        #     if config.get('full_dataset') is None or config.get('full_dataset') == True:
+        #         plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
+        #         plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
+        #     else:
+        #         # pass
+        #         window = config.get('generation_per_epoch')
+        #         a = np.max(fitness, axis=1)
+        #         n = int(a.shape[0] / window)
+        #         epochs = np.linspace(0, n - 1, n)
+        #
+        # else:
+        #     plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy ' + str_list[i])
+        #     plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation ' + str_list[i])
+    # plt.title()
+    plt.legend()
+    plt.grid()
+    plt.subplot(1, 2, 2)
     for i, f in enumerate(file_list):
         data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
         config = load_config(os.path.join(f, 'config.json'))
-        if data.result_dict.get('Fitness') is not None:
-            fitness = np.stack(data.result_dict.get('Fitness'))
-            epochs = np.linspace(0, fitness.shape[0] - 1, fitness.shape[0])
-            if config.get('full_dataset') is None or config.get('full_dataset') == True:
-                plt.plot(epochs, np.max(fitness, axis=1), '*--', label='min fitness')
-                plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
-            else:
-                # pass
-                window = config.get('generation_per_epoch')
-                a = np.max(fitness, axis=1)
-                n = int(a.shape[0] / window)
-                # b = np.zeros(int(a.shape[0] / window))
-                # for i in range(0, int(a.shape[0] / window)):
-                #     b[i] = np.amax(a[window * i:window * i + window])
-                epochs = np.linspace(0, n - 1, n)
-                # plt.plot(epochs, b, '*--', label='min fitness')
-                # plt.plot(epochs, np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
-            plt.plot(epochs, np.asarray(data.result_dict.get('Best')), label=str_list[i])
-        else:
-            plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Accuracy')
-            plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation')
+        plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label=str_list[i])
+        # plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '*--', label='Validation ' + str_list[i])
     plt.legend()
     plt.grid()
     plt.show()

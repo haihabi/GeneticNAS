@@ -70,6 +70,8 @@ ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_ty
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
                                      population_size=config.get('population_size'), delay=config.get('delay'),
                                      keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
+                                     p_cross_over=config.get('p_cross_over'),
+                                     cross_over_type=config.get('cross_over_type'),
                                      min_objective=False)
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
                     ss)

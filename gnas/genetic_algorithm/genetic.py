@@ -1,7 +1,7 @@
 import numpy as np
 from random import choices
 from gnas.search_space.search_space import SearchSpace
-from gnas.search_space.cross_over import individual_uniform_crossover
+from gnas.search_space.cross_over import individual_uniform_crossover, individual_block_crossover
 from gnas.search_space.mutation import individual_flip_mutation
 from gnas.genetic_algorithm.ga_results import GenetricResult
 from gnas.genetic_algorithm.population_dict import PopulationDict
@@ -9,8 +9,9 @@ from gnas.genetic_algorithm.population_dict import PopulationDict
 
 def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=20,
                                delay=20,
-                               min_objective=True, mutation_p=None):
+                               min_objective=True, mutation_p=None, p_cross_over=None, cross_over_type='Bit'):
     if mutation_p is None: mutation_p = 1 / search_space.n_elements
+    if p_cross_over is None: p_cross_over = 1
 
     def population_initializer(p_size):
         return search_space.generate_population(p_size)
@@ -18,12 +19,20 @@ def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, po
     def mutation_function(x):
         return individual_flip_mutation(x, mutation_p)
 
-    def cross_over_function(x0, x1):
-        return individual_uniform_crossover(x0, x1)
+    if cross_over_type == 'Bit':
+        print("Bit base cross over")
+        def cross_over_function(x0, x1):
+            return individual_uniform_crossover(x0, x1, p_cross_over)
+    elif cross_over_type == 'Block':
+        print("Block base cross over")
+        def cross_over_function(x0, x1):
+            return individual_block_crossover(x0, x1, p_cross_over)
+    else:
+        raise Exception('')
 
     def selection_function(p):
         couples = choices(population=list(range(len(p))), weights=p,
-                          k=2 * generation_size)
+                          k=generation_size)
         return np.reshape(np.asarray(couples), [-1, 2])
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
@@ -68,7 +77,8 @@ class GeneticAlgorithms(object):
         p = population_fitness / np.nansum(population_fitness)
         if self.min_objective: p = 1 - p
         couples = self.selection_function(p)  # selection
-        child = [self.cross_over_function(population[c[0]], population[c[1]]) for c in couples]  # cross-over
+        child = [cc for c in couples for cc in
+                 self.cross_over_function(population[c[0]], population[c[1]])]  # cross-over
         new_generation = np.asarray([self.mutation_function(c) for c in child])  # mutation
 
         p_array = np.asarray([p.code for p in new_generation])
@@ -95,11 +105,15 @@ class GeneticAlgorithms(object):
         f_min = np.min(generation_fitness)
         total_dict = self.max_dict.copy()
         total_dict.update(self.current_dict)
-
-        best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size)
+        last_dict = None
         if self.keep_size > 0:
             last_dict = total_dict.filter_last_n(self.keep_size)
-            best_max_dict = best_max_dict.merge(last_dict)
+        if self.population_size - self.keep_size > 0:
+            best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size)
+            if self.keep_size > 0:
+                best_max_dict = best_max_dict.merge(last_dict)
+        else:
+            best_max_dict = last_dict
 
         n_diff = self.max_dict.get_n_diff(best_max_dict)
         self.max_dict = best_max_dict
@@ -141,4 +155,4 @@ class GeneticAlgorithms(object):
             p = population_fitness / np.nansum(population_fitness)
             couples = choices(population=population, weights=p, k=2)
             child = self.cross_over_function(couples[0], couples[1])
-            return self.mutation_function(child)
+            return self.mutation_function(child[0])

@@ -83,7 +83,7 @@ class TestSearchSpace(unittest.TestCase):
         for i in range(100):
             individual_a = ss.generate_individual()
             individual_b = ss.generate_individual()
-            individual_c = individual_uniform_crossover(individual_a, individual_b)
+            individual_c, individual_d = individual_uniform_crossover(individual_a, individual_b, 1)
 
             for a, b, c in zip(individual_a.iv, individual_b.iv, individual_c.iv):
                 for ia, ib, ic in zip(a, b, c):
