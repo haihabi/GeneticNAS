@@ -73,8 +73,9 @@ ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_
                                      p_cross_over=config.get('p_cross_over'),
                                      cross_over_type=config.get('cross_over_type'),
                                      min_objective=False)
+aux = config.get('aux_loss')
 net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
-                    ss)
+                    ss, aux=aux)
 net.to(working_device)
 ######################################
 # Build Optimizer and Loss function
@@ -131,12 +132,13 @@ for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple ti
         optimizer.zero_grad()  # zero the parameter gradients
         outputs = net(inputs)  # forward
 
-        _, predicted = torch.max(outputs, 1)
+        _, predicted = torch.max(outputs[0], 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
-        loss = criterion(outputs, labels)
-
+        loss = criterion(outputs[0], labels)
+        if aux:
+            loss += config.get('aux_scale') * criterion(outputs[1], labels)
         loss.backward()  # backward
 
         optimizer.step()  # optimize

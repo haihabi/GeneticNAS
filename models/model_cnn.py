@@ -25,7 +25,7 @@ class RepeatBlock(nn.Module):
 
 
 class Net(nn.Module):
-    def __init__(self, n_blocks, n_channels, n_classes, dropout, ss):
+    def __init__(self, n_blocks, n_channels, n_classes, dropout, ss, aux=False):
         n_block_types = len(ss.ocl)
         normal_block_index = 0
         reduce_block_index = 0
@@ -67,6 +67,10 @@ class Net(nn.Module):
         self.dp = nn.Dropout(p=dropout)
         self.fc1 = nn.Sequential(nn.ReLU(),
                                  nn.Linear(4 * n_channels, n_classes))
+        self.aux = aux
+        if aux:
+            self.fc2 = nn.Sequential(nn.ReLU(),
+                                     nn.Linear(2 * n_channels, n_classes))
         self.reset_param()
 
     def reset_param(self):
@@ -82,14 +86,17 @@ class Net(nn.Module):
         x_prev = self.bn2_prev(self.conv2_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_2(self.block_2_reduce(x, x_prev), x)
-
+        if self.aux: x2 = torch.mean(torch.mean(x, dim=-1), dim=-1)
         x = self.bn3(self.conv3(self.avg(x)))
         x_prev = self.bn3_prev(self.conv3_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_3(self.block_3_reduce(x, x_prev), x)
 
         x = torch.mean(torch.mean(x, dim=-1), dim=-1)
-        return self.fc1(self.dp(x))
+        if self.aux:
+            return [self.fc1(self.dp(x)), self.fc2(self.dp(x2))]
+        else:
+            return [self.fc1(self.dp(x))]
 
     def set_individual(self, individual):
         self.block_1.set_individual(individual)

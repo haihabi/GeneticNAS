@@ -21,10 +21,12 @@ def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, po
 
     if cross_over_type == 'Bit':
         print("Bit base cross over")
+
         def cross_over_function(x0, x1):
             return individual_uniform_crossover(x0, x1, p_cross_over)
     elif cross_over_type == 'Block':
         print("Block base cross over")
+
         def cross_over_function(x0, x1):
             return individual_block_crossover(x0, x1, p_cross_over)
     else:
@@ -127,10 +129,10 @@ class GeneticAlgorithms(object):
         fp_max = np.max(population_fitness)
         fp_min = np.min(population_fitness)
         self.ga_result.add_population_result(population_fitness, population)
-        if self.i > self.delay:
-            self.generation = self._create_new_generation(population, population_fitness)
-        else:
-            self.generation = self._create_random_generation()
+        # if self.i > self.delay:
+        self.generation = self._create_new_generation(population, population_fitness)
+        # else:
+        #     self.generation = self._create_random_generation()
 
         print(
             "Update generation | mean fitness: {:5.2f} | var fitness {:5.2f} | max fitness: {:5.2f} | min fitness {:5.2f} |population size {:d}|".format(
@@ -147,12 +149,9 @@ class GeneticAlgorithms(object):
         self.current_dict.update({individual: individual_fitness})
 
     def sample_child(self):
-        if self.i < self.delay:
+        if len(list(self.max_dict.keys())) == 0:
             return self.population_initializer(1)[0]
         else:
-            population_fitness = np.asarray(list(self.max_dict.values())).flatten()
-            population = np.asarray(list(self.max_dict.keys())).flatten()
-            p = population_fitness / np.nansum(population_fitness)
-            couples = choices(population=population, weights=p, k=2)
+            couples = choices(list(self.max_dict.keys()), k=2)
             child = self.cross_over_function(couples[0], couples[1])
             return self.mutation_function(child[0])

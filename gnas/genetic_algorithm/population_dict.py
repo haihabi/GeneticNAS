@@ -5,10 +5,16 @@ import copy
 
 
 class PopulationDict(object):
-    def __init__(self, values_dict: OrderedDict = OrderedDict({}), index_dict: OrderedDict = OrderedDict({}),
+    def __init__(self, values_dict: OrderedDict = None, index_dict: OrderedDict = None,
                  current_index=0):
-        self.values_dict = values_dict
-        self.index_dict = index_dict
+        if values_dict is None:
+            self.values_dict = OrderedDict({})
+        else:
+            self.values_dict = values_dict
+        if index_dict is None:
+            self.index_dict = OrderedDict({})
+        else:
+            self.index_dict = index_dict
         self.i = current_index
 
     def copy(self):

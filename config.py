@@ -14,10 +14,10 @@ def load_config(path_dir):
 
 
 def default_config():
-    return {'batch_size': 128,
+    return {'batch_size': 256,
             'batch_size_val': 1000,
             'n_epochs': 310,
-            'n_blocks': 2,
+            'n_blocks': 1,
             'n_block_type': 3,
             'n_nodes': 5,
             'n_channels': 20,
@@ -26,11 +26,11 @@ def default_config():
             'full_dataset': False,
             'population_size': 20,
             'keep_size': 0,
-            'mutation_p': 0.02,
+            'mutation_p': None,
             'p_cross_over': 1.0,
             'cross_over_type': 'Block',
-            'learning_rate': 0.1,
-            'lr_min': 0.0001,
+            'learning_rate': 0.2,
+            'lr_min': 0.0002,
             'weight_decay': 0.0001,
             'delay': 10,
             'dropout': 0.2,
@@ -41,4 +41,6 @@ def default_config():
             'length': 16,
             'LRType': 'MultiStepLR',
             'num_class': 10,
-            'momentum': 0.9}
+            'momentum': 0.9,
+            'aux_loss': False,
+            'aux_scale': 0.4}
