@@ -6,8 +6,7 @@ from config import load_config
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/GNAS/logs/2019_01_20_13_47_02", "/data/projects/GNAS/logs/2019_01_20_20_40_02",
-             "/data/projects/GNAS/logs/2019_01_20_21_17_15"]
+file_list = ["/data/projects/GNAS/logs/2019_01_25_08_46_39","/data/projects/GNAS/logs/2019_01_24_19_06_00","/data/projects/GNAS/logs/2019_01_23_21_20_33"]
 
 
 def read_config(file_path):

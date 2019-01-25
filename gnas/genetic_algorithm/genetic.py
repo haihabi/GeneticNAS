@@ -12,6 +12,7 @@ def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, po
                                min_objective=True, mutation_p=None, p_cross_over=None, cross_over_type='Bit'):
     if mutation_p is None: mutation_p = 1 / search_space.n_elements
     if p_cross_over is None: p_cross_over = 1
+    print('p mutation:' + str(mutation_p), 1 / search_space.n_elements)
 
     def population_initializer(p_size):
         return search_space.generate_population(p_size)

@@ -3,9 +3,11 @@ from gnas.search_space.individual import Individual, MultipleBlockIndividual
 
 
 def flip_max_value(current_value, max_value, p):
-    flip = 1 - np.round(0.5 - p + np.random.rand(current_value.shape[0])).astype('int')
-    new_dna = current_value + flip
+    flip = np.floor(np.random.rand(current_value.shape[0]) + p).astype('int')
+    sign = (2 * (np.round(np.random.rand(current_value.shape[0])) - 0.5)).astype('int')
+    new_dna = current_value + flip * sign
     new_dna[new_dna > max_value] = 0
+    new_dna[new_dna < 0] = max_value[new_dna < 0]
     return new_dna
 
 
