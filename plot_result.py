@@ -6,7 +6,21 @@ from config import load_config
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter1d
 
-file_list = ["/data/projects/GNAS/logs/2019_01_25_08_46_39","/data/projects/GNAS/logs/2019_01_24_19_06_00","/data/projects/GNAS/logs/2019_01_23_21_20_33"]
+# file_list = ["/data/projects/GNAS/logs/logs2filter/2019_01_25_18_23_27",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_25_18_23_29",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_08_02_54",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_08_13_05",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_09_34_11",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_20_15_17",
+#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_21_37_25", "/data/projects/GNAS/logs/2019_01_26_13_18_17",
+#              "/data/projects/GNAS/logs/2019_01_25_08_46_39", "/data/projects/GNAS/logs/2019_01_24_19_06_00",
+#              "/data/projects/GNAS/logs/2019_01_23_21_20_33"]
+
+file_list = ["/data/projects/GNAS/logs/2019_01_30_23_11_09", "/data/projects/GNAS/logs/2019_01_30_06_45_57",
+             "/data/projects/GNAS/logs/2019_01_29_09_22_21",
+             "/data/projects/GNAS/logs/2019_01_24_19_06_00"]
+file_list = ["/data/projects/GNAS/logs/2019_02_02_11_17_29",
+             "/data/projects/GNAS/logs/2019_02_03_23_04_20"]
 
 
 def read_config(file_path):

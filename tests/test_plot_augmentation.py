@@ -11,10 +11,10 @@ import torch.optim as optim
 import os
 import pickle
 import datetime
-from config import default_config, save_config, load_config
+from config import default_config_cnn, save_config, load_config
 import argparse
 from cnn_utils import CosineAnnealingLR, Cutout
-from common import evaulte_single, evaulte_individual_list
+from common import evaluate_single, evaluate_individual_list
 from matplotlib import pyplot as plt
 import numpy as np
 

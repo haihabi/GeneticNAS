@@ -41,10 +41,10 @@ class PopulationDict(object):
             self.index_dict.update({k: self.i})
         self.i += 1
 
-    def filter_top_n(self, n=sys.maxsize):
+    def filter_top_n(self, n=sys.maxsize, min_max=True):
         values_dict = OrderedDict({})
         index_dict = OrderedDict({})
-        for i, (key, value) in enumerate(sorted(self.values_dict.items(), key=itemgetter(1), reverse=True)):
+        for i, (key, value) in enumerate(sorted(self.values_dict.items(), key=itemgetter(1), reverse=min_max)):
             if i < n:
                 values_dict.update({key: value})
                 index_dict.update({key: self.index_dict.get(key)})

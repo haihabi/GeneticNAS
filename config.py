@@ -13,7 +13,7 @@ def load_config(path_dir):
     return data
 
 
-def default_config():
+def default_config_cnn():
     return {'batch_size': 128,
             'batch_size_val': 1000,
             'n_epochs': 310,
@@ -26,7 +26,7 @@ def default_config():
             'full_dataset': False,
             'population_size': 20,
             'keep_size': 0,
-            'mutation_p': 0.01,
+            'mutation_p': 0.02,
             'p_cross_over': 1.0,
             'cross_over_type': 'Block',
             'learning_rate': 0.1,

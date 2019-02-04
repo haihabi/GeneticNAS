@@ -1,6 +1,6 @@
 import numpy as np
 from gnas.search_space.search_space import SearchSpace
-from gnas.search_space.operation_space import CnnNodeConfig
+from gnas.search_space.operation_space import CnnNodeConfig, RnnNodeConfig, RnnInputNodeConfig
 from enum import Enum
 
 
@@ -39,3 +39,11 @@ def get_enas_cnn_search_space(n_nodes, drop_path_control, n_cell_type: SearchSpa
         node_config_list_b = _two_input_cell(n_nodes, drop_path_control)
         node_config_list_c = _one_input_cell(n_nodes, drop_path_control)
         return SearchSpace([node_config_list_a, node_config_list_b, node_config_list_c], single_block=False)
+
+
+def get_enas_rnn_search_space(n_nodes) -> SearchSpace:
+    nll = ['Tanh', 'ReLU', 'ReLU6', 'Sigmoid']
+    node_config_list = [RnnInputNodeConfig(2, [0, 1], nll)]
+    for i in range(n_nodes - 1):
+        node_config_list.append(RnnNodeConfig(3 + i, np.linspace(2, 2 + i, 1 + i).astype('int'), nll))
+    return SearchSpace(node_config_list)

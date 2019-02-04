@@ -7,7 +7,7 @@ from gnas.genetic_algorithm.ga_results import GenetricResult
 from gnas.genetic_algorithm.population_dict import PopulationDict
 
 
-def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=20,
+def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=0,
                                delay=20,
                                min_objective=True, mutation_p=None, p_cross_over=None, cross_over_type='Bit'):
     if mutation_p is None: mutation_p = 1 / search_space.n_elements
@@ -112,7 +112,10 @@ class GeneticAlgorithms(object):
         if self.keep_size > 0:
             last_dict = total_dict.filter_last_n(self.keep_size)
         if self.population_size - self.keep_size > 0:
-            best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size)
+
+            best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size,
+                                                    min_max=not self.min_objective)
+
             if self.keep_size > 0:
                 best_max_dict = best_max_dict.merge(last_dict)
         else:
