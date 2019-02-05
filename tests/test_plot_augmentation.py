@@ -13,8 +13,8 @@ import pickle
 import datetime
 from config import default_config_cnn, save_config, load_config
 import argparse
-from cnn_utils import CosineAnnealingLR, Cutout
-from common import evaluate_single, evaluate_individual_list
+from cnn_utils import CosineAnnealingLR, Cutout, evaluate_individual_list, evaluate_single
+
 from matplotlib import pyplot as plt
 import numpy as np
 

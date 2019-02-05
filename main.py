@@ -12,15 +12,23 @@ from models import model_cnn, model_rnn
 from cnn_utils import CosineAnnealingLR, evaluate_single, evaluate_individual_list
 from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate
 from data import get_dataset
-from common import load_final, make_log_dir,get_model_type,ModelType
-from config import get_config, load_config,save_config
+from common import load_final, make_log_dir, get_model_type, ModelType
+from config import get_config, load_config, save_config
 
+#######################################
+# Constants
+#######################################
+log_interval = 200
+#######################################
+# User input
+#######################################
 parser = argparse.ArgumentParser(description='PyTorch GNAS')
-parser.add_argument('--dataset_name', type=str,choices=['CIFAR10','CIFAR100','PTB'], help='the working data',default='CIFAR10')
+parser.add_argument('--dataset_name', type=str, choices=['CIFAR10', 'CIFAR100', 'PTB'], help='the working data',
+                    default='CIFAR10')
 parser.add_argument('--config_file', type=str, help='location of the config file')
 parser.add_argument('--search_dir', type=str, help='the log dir of the search')
 parser.add_argument('--final', type=bool, help='location of the config file', default=False)
-parser.add_argument('--data_path', type=str, default='./dataset/ptb',help='location of the dataset')
+parser.add_argument('--data_path', type=str, default='./dataset/', help='location of the dataset')
 args = parser.parse_args()
 #######################################
 # Search Working Device
@@ -30,7 +38,8 @@ print(working_device)
 #######################################
 # Set seed
 #######################################
-model_type=get_model_type(dataset_name=args.dataset_name)
+model_type = get_model_type(dataset_name=args.dataset_name)
+print("Selected mode type:" + str(model_type))
 #######################################
 # Parameters
 #######################################
@@ -38,43 +47,42 @@ config = get_config(model_type)
 if args.config_file is not None:
     print("Loading config file:" + args.config_file)
     config.update(load_config(args.config_file))
-config.update({'data_path':args.data_path,'dataset_name':args.dataset_name,'working_device':working_device})
+config.update({'data_path': args.data_path, 'dataset_name': args.dataset_name, 'working_device': str(working_device)})
 print(config)
 ######################################
 # Read dataset and set augmentation
 ######################################
-trainloader, testloader = get_dataset(config)
+trainloader, testloader, n_param = get_dataset(config)
 ######################################
 # Config model and search space
 ######################################
-if model_type==ModelType.CNN:
+if model_type == ModelType.CNN:
     min_objective = False
     n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
     dp_control = gnas.DropPathControl(config.get('drop_path_keep_prob'))
     ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
 
-    # ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
-    #                                      population_size=config.get('population_size'), delay=config.get('delay'),
-    #                                      keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
-    #                                      p_cross_over=config.get('p_cross_over'),
-    #                                      cross_over_type=config.get('cross_over_type'),
-    #                                      min_objective=False)
-
-    net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'), config.get('dropout'),
+    net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'),
+                        config.get('dropout'),
                         ss, aux=config.get('aux_loss')).to(working_device)
-elif model_type==ModelType.RNN:
-    min_objective=True
-    ss = gnas.get_enas_rnn_search_space(12)
-    net = model_rnn.RNNModel(ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied,ss=ss).to(working_device)
+elif model_type == ModelType.RNN:
+    min_objective = True
+    ntokens = n_param
+    ss = gnas.get_enas_rnn_search_space(config.get('n_nodes'))
+    net = model_rnn.RNNModel(ntokens, config.get('n_channels'), config.get('n_channels'), config.get('n_blocks'),
+                             config.get('dropout'),
+                             tie_weights=True,
+                             ss=ss).to(
+        working_device)
 ######################################
 # Build genetic_algorithm_searcher
 #####################################
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
-                                         population_size=config.get('population_size'), delay=config.get('delay'),
-                                         keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
-                                         p_cross_over=config.get('p_cross_over'),
-                                         cross_over_type=config.get('cross_over_type'),
-                                         min_objective=min_objective)
+                                     population_size=config.get('population_size'), delay=config.get('delay'),
+                                     keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
+                                     p_cross_over=config.get('p_cross_over'),
+                                     cross_over_type=config.get('cross_over_type'),
+                                     min_objective=min_objective)
 ######################################
 # Build Optimizer and Loss function
 #####################################
@@ -89,10 +97,10 @@ if config.get('LRType') == 'CosineAnnealingLR':
 elif config.get('LRType') == 'MultiStepLR':
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
                                                [int(config.get('n_epochs') / 2), int(3 * config.get('n_epochs') / 4)])
-elif config.get('LRType') =='ExponentialLR':
+elif config.get('LRType') == 'ExponentialLR':
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=config.get('gamma'))
 else:
-    raise Exception('unkown LRType:'+config.get('LRType'))
+    raise Exception('unkown LRType:' + config.get('LRType'))
 
 ##################################################
 # Generate log dir and Save Params
@@ -107,7 +115,7 @@ if args.final: ind = load_final(net, args.search_dir)
 # Start Epochs
 ##################################################
 ra = gnas.ResultAppender()
-if model_type==ModelType.CNN:
+if model_type == ModelType.CNN:
     best = 0
     print("Starting Traing with CNN Model")
     for epoch in range(config.get('n_epochs')):  # loop over the dataset multiple times
@@ -190,19 +198,20 @@ if model_type==ModelType.CNN:
             ra.add_result('Fitness', ga.ga_result.fitness_list)
             ra.add_result('Fitness-Population', ga.ga_result.fitness_full_list)
         ra.save_result(log_dir)
-elif model_type==ModelType.RNN:
+elif model_type == ModelType.RNN:
     best = 1000
-    for epoch in range(1, config.get('n_epochs')+ 1):
+    for epoch in range(1, config.get('n_epochs') + 1):
         if epoch > 15:
             scheduler.step()
         epoch_start_time = time.time()
-        eval_batch_size=config.get('batch_size_val')
-        train_loss = train_genetic_rnn(ga, trainloader, 0, net, optimizer, criterion, ntokens, config.get('batch_size'),
-                                       config.get('bptt'), args.clip,
-                                       args.log_interval)
+        eval_batch_size = config.get('batch_size_val')
+        train_loss = train_genetic_rnn(ga, trainloader, net, optimizer, criterion, ntokens, config.get('batch_size'),
+                                       config.get('bptt'), config.get('clip'),
+                                       log_interval)
 
         val_loss, loss_var, max_loss, min_loss, n_diff = rnn_genetic_evaluate(ga, net, criterion, testloader, ntokens,
-                                                                              config.get('batch_size_val'), config.get('bptt'))
+                                                                              config.get('batch_size_val'),
+                                                                              config.get('bptt'))
 
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | lr {:02.2f} |  '
@@ -210,7 +219,7 @@ elif model_type==ModelType.RNN:
                         val_loss, scheduler.get_lr()[-1]))
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
-        if  val_loss < best:
+        if val_loss < best:
             torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
             if not args.final:
                 gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))

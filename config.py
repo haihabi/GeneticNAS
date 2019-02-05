@@ -2,6 +2,7 @@ import json
 import os
 from common import ModelType
 
+
 def save_config(path_dir, config):
     with open(os.path.join(path_dir, 'config.json'), 'w') as outfile:
         json.dump(config, outfile)
@@ -12,22 +13,25 @@ def load_config(path_dir):
         data = json.load(json_file)
     return data
 
+
 def get_config(model_type):
-        if ModelType.CNN==model_type:
-                return default_config_cnn()
-        elif ModelType.RNN==model_type:
-                return default_config_rnn()
-        else:
-                raise Exception('unkown model type:'+str(model_type))
+    if ModelType.CNN == model_type:
+        return default_config_cnn()
+    elif ModelType.RNN == model_type:
+        return default_config_rnn()
+    else:
+        raise Exception('unkown model type:' + str(model_type))
+
 
 def default_config_rnn():
     return {'batch_size': 20,
             'batch_size_val': 10,
-            'bptt':35,
+            'bptt': 35,
             'n_epochs': 310,
             'n_blocks': 2,
-            'n_nodes': 5,
-            'n_channels': 20,
+            'n_nodes': 12,
+            'n_channels': 200,
+            'clip': 0.25,
             'generation_size': 20,
             'generation_per_epoch': 2,
             'full_dataset': False,
@@ -36,14 +40,13 @@ def default_config_rnn():
             'mutation_p': 0.02,
             'p_cross_over': 1.0,
             'cross_over_type': 'Block',
-            'learning_rate': 0.1,
+            'learning_rate': 20.0,
             'lr_min': 0.0001,
             'weight_decay': 0.0001,
             'delay': 10,
             'dropout': 0.2,
             'LRType': 'ExponentialLR',
-            'gamma':0.96,
-            'num_class': 10,
+            'gamma': 0.96,
             'momentum': 0.9,
             'aux_loss': False,
             'aux_scale': 0.4}

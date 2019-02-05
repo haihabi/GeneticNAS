@@ -17,7 +17,7 @@
   "weight_decay": 0.0001,
   "delay": 10,
   "dropout": 0.2,
-  "drop_path_keep_prob": 0.8,
+  "drop_path_keep_prob": 1.0,
   "drop_path_start_epoch": 0,
   "cutout": true,
   "n_holes": 1,

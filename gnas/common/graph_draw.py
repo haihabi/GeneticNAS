@@ -2,6 +2,7 @@ import os
 import numpy as np
 
 from gnas.search_space.individual import Individual, MultipleBlockIndividual
+from gnas.search_space.operation_space import RnnNodeConfig, RnnInputNodeConfig, CnnNodeConfig
 
 
 def add_node(graph, node_id, label, shape='box', style='filled'):
@@ -39,20 +40,37 @@ def _draw_individual(ocl, individual, path):
         add_node(graph, i, 'x[' + str(i) + ']')
 
     input_list = []
-    for i, oc in enumerate(individual.generate_node_config()):
-        input_a = oc[0]
-        input_b = oc[1]
-        input_list.append(input_a)
-        input_list.append(input_b)
-        op_a = oc[4]
-        op_b = oc[5]
-        add_node(graph, (i + ofset) * 10, ocl[i].op_list[op_a])
-        add_node(graph, (i + ofset) * 10 + 1, ocl[i].op_list[op_b])
-        graph.add_edge(input_a, (i + ofset) * 10)
-        graph.add_edge(input_b, (i + ofset) * 10 + 1)
-        add_node(graph, (i + ofset), 'Add')
-        graph.add_edge((i + ofset) * 10, (i + ofset))
-        graph.add_edge((i + ofset) * 10 + 1, (i + ofset))
+
+    for i, (oc, op) in enumerate(zip(individual.generate_node_config(), ocl)):
+        if isinstance(op, CnnNodeConfig):
+            input_a = oc[0]
+            input_b = oc[1]
+            input_list.append(input_a)
+            input_list.append(input_b)
+            op_a = oc[4]
+            op_b = oc[5]
+            add_node(graph, (i + ofset) * 10, ocl[i].op_list[op_a])
+            add_node(graph, (i + ofset) * 10 + 1, ocl[i].op_list[op_b])
+            graph.add_edge(input_a, (i + ofset) * 10)
+            graph.add_edge(input_b, (i + ofset) * 10 + 1)
+            add_node(graph, (i + ofset), 'Add')
+            graph.add_edge((i + ofset) * 10, (i + ofset))
+            graph.add_edge((i + ofset) * 10 + 1, (i + ofset))
+        elif isinstance(op, RnnInputNodeConfig):
+            op_type = op.non_linear_list[oc]
+            add_node(graph, (i + ofset), op_type)
+            graph.add_edge(0, (i + ofset))
+            graph.add_edge(1, (i + ofset))
+            input_list.append(0)
+            input_list.append(1)
+
+        elif isinstance(op, RnnNodeConfig):
+            op_type = op.non_linear_list[oc[-1]]
+            add_node(graph, (i + ofset), op_type)
+            graph.add_edge(oc[0], (i + ofset))
+            input_list.append(oc[0])
+        else:
+            raise Exception('unkown node type')
     input_list = np.unique(input_list)
     op_inputs = [int(i) for i in np.linspace(ofset, ofset + individual.get_n_op() - 1, individual.get_n_op()) if
                  i not in input_list]

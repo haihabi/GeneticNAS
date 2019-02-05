@@ -96,6 +96,13 @@ class TestSearchSpace(unittest.TestCase):
         self.assertTrue(cc != cb)
         self.assertTrue(cc != ca)
 
+    def test_plot_individual_rnn(self):
+        current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+        ss = gnas.get_enas_rnn_search_space(12)
+        ind = ss.generate_individual()
+        draw_network(ss, ind, os.path.join(current_path, 'graph'))
+
     def test_plot_individual(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 

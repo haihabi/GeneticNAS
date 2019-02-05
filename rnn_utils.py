@@ -39,7 +39,7 @@ def rnn_genetic_evaluate(ga, input_model, input_criterion, data_source, ntokens,
     return ga.update_population()
 
 
-def train_genetic_rnn(ga, train_data, p, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
+def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
                       grad_clip,
                       log_interval):
     # Turn on training mode which enables dropout.
