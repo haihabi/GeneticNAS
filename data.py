@@ -14,8 +14,14 @@ def get_dataset(config):
         return get_cifar(config, os.path.join(data_path, 'CIFAR100'), dataset_name='CIFAR100')
     elif dataset_name == 'PTB':
         corpus = Corpus(os.path.join(data_path, 'ptb'))
-        train_data, val_data, test_data = corpus.batchify(config.get('batch_size'), config.get('working_device'))
-        return train_data, val_data, len(corpus.dictionary)
+        batch_size_train = config.get('batch_size')
+        batch_size_val = config.get('batch_size_val')
+        device = config.get('working_device')
+        # train_data, val_data, test_data = corpus.batchify(config.get('batch_size'), config.get('working_device'))
+        return corpus.single_batchify(corpus.train, batch_size_train, device), corpus.single_batchify(corpus.valid,
+                                                                                                      batch_size_val,
+                                                                                                      device), len(
+            corpus.dictionary)
     else:
         raise Exception('unkown dataset type')
 
