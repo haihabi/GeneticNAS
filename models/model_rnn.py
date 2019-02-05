@@ -96,7 +96,7 @@ class LockedDropout(nn.Module):
 class RNNModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers, dropout=0.5, tie_weights=False, ss=None):
+    def __init__(self, ntoken, ninp, nhid, nlayers, dropout=0.5, tie_weights=False, ss=None):
         super(RNNModel, self).__init__()
         self.drop_input = LockedDropout(0.65)  # TODO:change to input config
         self.drop_end = LockedDropout(0.4)  # TODO:change to input config
@@ -120,7 +120,6 @@ class RNNModel(nn.Module):
 
         self.init_weights()
 
-        self.rnn_type = rnn_type
         self.nhid = nhid
         self.nlayers = nlayers
 

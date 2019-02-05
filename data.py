@@ -4,8 +4,21 @@ import torchvision
 import torchvision.transforms as transforms
 from cnn_utils import Cutout
 
+def get_dataset(config):
+    dataset_name=config.get('dataset_name')
+    data_path=config.get('data_path')
+    if dataset_name=='CIFAR10':
+        return get_cifar(config,data_path)
+    elif dataset_name=='CIFAR100':
+        return get_cifar(config,data_path,dataset_name='CIFAR100')
+    elif dataset_name=='PTB':
+        corpus = Corpus(config.get('data_path'))
+        train_data, val_data, test_data = corpus.batchify(config.get('batch_size'), config.get('working_device'))
+        return train_data,val_data,len(corpus.dictionary)
+    else:
+        raise Exception('unkown dataset type')
 
-def get_cifar10(config):
+def get_cifar(config,data_path,dataset_name='CIFAR10'):
     train_transform = transforms.Compose([])
     normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                      std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
@@ -19,17 +32,30 @@ def get_cifar10(config):
     transform = transforms.Compose([
         transforms.ToTensor(),
         normalize])
-
-    trainset = torchvision.datasets.CIFAR10(root='./dataset', train=True,
+    if dataset_name=='CIFAR10':
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True,
                                             download=True, transform=train_transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch_size'),
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch_size'),
                                               shuffle=True, num_workers=4)
 
-    testset = torchvision.datasets.CIFAR10(root='./dataset', train=False,
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False,
                                            download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size_val'),
+        testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size_val'),
                                              shuffle=False, num_workers=4)
-    return trainloader, testloader
+        n_class=10
+    elif dataset_name=='CIFAR100':
+        trainset = torchvision.datasets.CIFAR100(root=data_path, train=True,
+                                                download=True, transform=train_transform)
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=config.get('batch_size'),
+                                                  shuffle=True, num_workers=4)
+
+        testset = torchvision.datasets.CIFAR100(root=data_path, train=False,
+                                               download=True, transform=transform)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=config.get('batch_size_val'),
+                                                 shuffle=False, num_workers=4)
+        n_class = 100
+
+    return trainloader, testloader,n_class
 
 
 class BatchIterator(object):

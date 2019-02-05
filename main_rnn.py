@@ -59,8 +59,10 @@ device = torch.device("cuda" if args.cuda else "cpu")
 ###############################################################################
 # Load dataset
 ###############################################################################
-corpus = data.Corpus(args.data)
+
 eval_batch_size = args.batch_size
+
+corpus = data.Corpus(args.data)
 train_data, val_data, test_data = corpus.batchify(args.batch_size, device)
 ###############################################################################
 # Build the model
@@ -85,7 +87,7 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.96)
 # Loop over epochs.
 lr = args.lr
 best_val_loss = None
-enable_search = True
+# enable_search = True
 ra = gnas.ResultAppender()
 # At any point you can hit Ctrl + C to break out of training early.
 try:

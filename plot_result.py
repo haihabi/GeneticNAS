@@ -3,24 +3,22 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 from config import load_config
-import pandas as pd
-from scipy.ndimage.filters import maximum_filter1d
 
-# file_list = ["/data/projects/GNAS/logs/logs2filter/2019_01_25_18_23_27",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_25_18_23_29",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_08_02_54",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_08_13_05",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_09_34_11",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_20_15_17",
-#              "/data/projects/GNAS/logs/logs2filter/2019_01_26_21_37_25", "/data/projects/GNAS/logs/2019_01_26_13_18_17",
-#              "/data/projects/GNAS/logs/2019_01_25_08_46_39", "/data/projects/GNAS/logs/2019_01_24_19_06_00",
-#              "/data/projects/GNAS/logs/2019_01_23_21_20_33"]
 
-file_list = ["/data/projects/GNAS/logs/2019_01_30_23_11_09", "/data/projects/GNAS/logs/2019_01_30_06_45_57",
-             "/data/projects/GNAS/logs/2019_01_29_09_22_21",
-             "/data/projects/GNAS/logs/2019_01_24_19_06_00"]
-file_list = ["/data/projects/GNAS/logs/2019_02_02_11_17_29",
-             "/data/projects/GNAS/logs/2019_02_03_23_04_20"]
+# LR Compare
+file_list=['/data/projects/swat/users/haih/GNAS/logs/2019_01_31_15_45_38','/data/projects/swat/users/haih/GNAS/logs/2019_02_04_19_18_00','/data/projects/swat/users/haih/GNAS/logs/2019_02_04_19_17_59']
+
+# Popultation size compare
+file_list=['/data/projects/swat/users/haih/GNAS/logs/2019_01_31_15_45_38',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_01_31_15_45_42',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_01_03_26_01',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_01_04_23_06',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_01_04_44_45',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_01_15_39_37',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_03_17_25_25',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_03_17_25_27',
+           '/data/projects/swat/users/haih/GNAS/logs/2019_02_03_17_25_28']
+
 
 
 def read_config(file_path):
@@ -94,14 +92,34 @@ else:
             param_list.append(k)
     param_list = np.unique(param_list)
     str_list = ['' for c in config_list]
+    res_dict=dict()
     for p in param_list:
         if len(np.unique([c.get(p) for c in config_list if c.get(p) is not None])) > 1:
             for i, c in enumerate(config_list):
                 str_list[i] = str_list[i] + ' ' + p + '=' + str(c.get(p))
+                if res_dict.get(p) is None:
+                    res_dict.update({p:[c.get(p)]})
+                else:
+                    res_dict.get(p).append(c.get(p))
         elif len(np.unique([c.get(p) for c in config_list if c.get(p) is not None])) == 1:
             if len([c.get(p) for c in config_list if c.get(p) is None]) != 0:
                 for i, c in enumerate(config_list):
                     str_list[i] = str_list[i] + ' ' + p + '=' + str(c.get(p))
+    if len(res_dict.keys())==1:
+        param_array=np.asarray(res_dict.get(list(res_dict.keys())[0]))
+        res_list=[]
+        for i, f in enumerate(file_list):
+            data = pickle.load(open(os.path.join(f, 'ga_result.pickle'), "rb"))
+            res_list.append(np.max(np.asarray(data.result_dict.get('Best'))))
+        index=np.argsort(param_array)
+        res_list=np.asarray(res_list)[index]
+        param_array=param_array[index]
+        plt.plot(param_array,res_list)
+        plt.grid()
+        plt.xlabel(list(res_dict.keys())[0].replace('_',' '))
+        plt.ylabel('Accuracy[%]')
+        plt.show()
+        print("a")
     #########################
     # Plot Validation
     #########################
