@@ -33,8 +33,6 @@ def default_config_rnn():
             'n_channels': 200,
             'clip': 0.25,
             'generation_size': 20,
-            'generation_per_epoch': 2,
-            'full_dataset': False,
             'population_size': 20,
             'keep_size': 0,
             'mutation_p': 0.02,
@@ -47,9 +45,7 @@ def default_config_rnn():
             'dropout': 0.2,
             'LRType': 'ExponentialLR',
             'gamma': 0.96,
-            'momentum': 0.9,
-            'aux_loss': False,
-            'aux_scale': 0.4}
+            'momentum': 0.9}
 
 
 def default_config_cnn():
