@@ -65,6 +65,12 @@ if model_type == ModelType.CNN:
     net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'),
                         config.get('dropout'),
                         ss, aux=config.get('aux_loss')).to(working_device)
+    ######################################
+    # Build Optimizer and Loss function
+    #####################################
+    optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum=config.get('momentum'),
+                          nesterov=True,
+                          weight_decay=config.get('weight_decay'))
 elif model_type == ModelType.RNN:
     min_objective = True
     ntokens = n_param
@@ -74,21 +80,24 @@ elif model_type == ModelType.RNN:
                              tie_weights=True,
                              ss=ss).to(
         working_device)
+    ######################################
+    # Build Optimizer and Loss function
+    #####################################
+    optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'),
+                          weight_decay=config.get('weight_decay'))
 ######################################
 # Build genetic_algorithm_searcher
 #####################################
 ga = gnas.genetic_algorithm_searcher(ss, generation_size=config.get('generation_size'),
-                                     population_size=config.get('population_size'), delay=config.get('delay'),
+                                     population_size=config.get('population_size'),
                                      keep_size=config.get('keep_size'), mutation_p=config.get('mutation_p'),
                                      p_cross_over=config.get('p_cross_over'),
                                      cross_over_type=config.get('cross_over_type'),
                                      min_objective=min_objective)
 ######################################
-# Build Optimizer and Loss function
-#####################################
+# Loss function
+######################################
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=config.get('learning_rate'), momentum=config.get('momentum'), nesterov=True,
-                      weight_decay=config.get('weight_decay'))
 ######################################
 # Select Learning schedule
 #####################################
@@ -225,10 +234,11 @@ elif model_type == ModelType.RNN:
                 gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
                 pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
 
-            best_val_loss = val_loss
+            best = val_loss
 
         ra.add_epoch_result('Loss', train_loss)
         ra.add_epoch_result('LR', scheduler.get_lr()[-1])
+        ra.add_epoch_result('Best',best)
         ra.add_result('Fitness', ga.ga_result.fitness_list)
         ra.save_result(log_dir)
 print('Finished Training')

@@ -8,7 +8,6 @@ from gnas.genetic_algorithm.population_dict import PopulationDict
 
 
 def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, population_size=300, keep_size=0,
-                               delay=20,
                                min_objective=True, mutation_p=None, p_cross_over=None, cross_over_type='Bit'):
     if mutation_p is None: mutation_p = 1 / search_space.n_elements
     if p_cross_over is None: p_cross_over = 1
@@ -40,12 +39,12 @@ def genetic_algorithm_searcher(search_space: SearchSpace, generation_size=20, po
 
     return GeneticAlgorithms(population_initializer, mutation_function, cross_over_function, selection_function,
                              min_objective=min_objective, generation_size=generation_size,
-                             population_size=population_size, keep_size=keep_size, delay=delay)
+                             population_size=population_size, keep_size=keep_size)
 
 
 class GeneticAlgorithms(object):
     def __init__(self, population_initializer, mutation_function, cross_over_function, selection_function,
-                 population_size=300, generation_size=20, keep_size=20, delay=20, min_objective=False):
+                 population_size=300, generation_size=20, keep_size=20, min_objective=False):
         ####################################################################
         # Functions
         ####################################################################
@@ -59,7 +58,6 @@ class GeneticAlgorithms(object):
         self.population_size = population_size
         self.generation_size = generation_size
         self.keep_size = keep_size
-        self.delay = delay
         self.min_objective = min_objective
         ####################################################################
         # status
@@ -133,10 +131,8 @@ class GeneticAlgorithms(object):
         fp_max = np.max(population_fitness)
         fp_min = np.min(population_fitness)
         self.ga_result.add_population_result(population_fitness, population)
-        # if self.i > self.delay:
         self.generation = self._create_new_generation(population, population_fitness)
-        # else:
-        #     self.generation = self._create_random_generation()
+
 
         print(
             "Update generation | mean fitness: {:5.2f} | var fitness {:5.2f} | max fitness: {:5.2f} | min fitness {:5.2f} |population size {:d}|".format(

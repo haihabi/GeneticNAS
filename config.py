@@ -24,7 +24,7 @@ def get_config(model_type):
 
 
 def default_config_rnn():
-    return {'batch_size': 20,
+    return {'batch_size': 64,
             'batch_size_val': 10,
             'bptt': 35,
             'n_epochs': 310,
@@ -39,13 +39,10 @@ def default_config_rnn():
             'p_cross_over': 1.0,
             'cross_over_type': 'Block',
             'learning_rate': 20.0,
-            'lr_min': 0.0001,
             'weight_decay': 0.0001,
-            'delay': 10,
             'dropout': 0.2,
             'LRType': 'ExponentialLR',
-            'gamma': 0.96,
-            'momentum': 0.9}
+            'gamma': 0.96}
 
 
 def default_config_cnn():
@@ -67,7 +64,6 @@ def default_config_cnn():
             'learning_rate': 0.1,
             'lr_min': 0.0001,
             'weight_decay': 0.0001,
-            'delay': 10,
             'dropout': 0.2,
             'drop_path_keep_prob': 1.0,
             'drop_path_start_epoch': 50,
