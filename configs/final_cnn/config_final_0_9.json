@@ -1,7 +1,7 @@
 {
   "batch_size": 64,
   "batch_size_val": 1000,
-  "n_epochs": 450,
+  "n_epochs": 630,
   "n_blocks": 4,
   "n_block_type": 3,
   "n_nodes": 5,
