@@ -1,0 +1,21 @@
+{
+  "batch_size": 20,
+  "batch_size_val": 10,
+  "bptt": 35,
+  "n_epochs": 310,
+  "n_blocks": 2,
+  "n_nodes": 12,
+  "n_channels": 600,
+  "clip": 0.25,
+  "generation_size": 20,
+  "population_size": 20,
+  "keep_size": 0,
+  "mutation_p": 0.02,
+  "p_cross_over": 1.0,
+  "cross_over_type": "Block",
+  "learning_rate": 20.0,
+  "weight_decay": 0.0001,
+  "dropout": 0.2,
+  "LRType": "ExponentialLR",
+  "gamma": 0.96
+}

@@ -2,8 +2,6 @@ import os
 import torch
 import time
 import math
-from gnas.genetic_algorithm.annealing_functions import cosine_annealing
-import numpy as np
 
 
 def get_batch(source, i, bptt):
@@ -39,9 +37,23 @@ def rnn_genetic_evaluate(ga, input_model, input_criterion, data_source, ntokens,
     return ga.update_population()
 
 
+def rnn_evaluate(input_model, input_criterion, data_source, ntokens, batch_size, bptt):
+    input_model.eval()  # Turn on evaluation mode which disables dropout.
+    hidden = input_model.init_hidden(batch_size)
+    with torch.no_grad():
+        total_loss = 0
+        for i in range(0, data_source.size(0) - 1, bptt):
+            data, targets = get_batch(data_source, i, bptt)
+            output, hidden = input_model(data, hidden)
+            output_flat = output.view(-1, ntokens)
+            total_loss += len(data) * input_criterion(output_flat, targets).item()
+            hidden = repackage_hidden(hidden)
+    return total_loss / (len(data_source) - 1)
+
+
 def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criterion, ntokens, batch_size, bptt,
                       grad_clip,
-                      log_interval):
+                      log_interval, final):
     # Turn on training mode which enables dropout.
     input_model.train()
     total_loss = 0.
@@ -54,7 +66,7 @@ def train_genetic_rnn(ga, train_data, input_model, input_optimizer, input_criter
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
         input_optimizer.zero_grad()  # zero old gradients for the next back propgation
-        input_model.set_individual(ga.sample_child())  # updating
+        if not final: input_model.set_individual(ga.sample_child())  # updating
 
         output, hidden = input_model(data, hidden)
         loss = input_criterion(output.view(-1, ntokens), targets)

@@ -10,7 +10,7 @@ import argparse
 import gnas
 from models import model_cnn, model_rnn
 from cnn_utils import CosineAnnealingLR, evaluate_single, evaluate_individual_list
-from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate
+from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate, rnn_evaluate
 from data import get_dataset
 from common import load_final, make_log_dir, get_model_type, ModelType
 from config import get_config, load_config, save_config
@@ -62,7 +62,7 @@ if model_type == ModelType.CNN:
     dp_control = gnas.DropPathControl(config.get('drop_path_keep_prob'))
     ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
 
-    net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), config.get('num_class'),
+    net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), n_param,
                         config.get('dropout'),
                         ss, aux=config.get('aux_loss')).to(working_device)
     ######################################
@@ -132,14 +132,20 @@ if model_type == ModelType.CNN:
         running_loss = 0.0
         correct = 0
         total = 0
+
         scheduler.step()
         s = time.time()
         net = net.train()
         if epoch == config.get('drop_path_start_epoch'):
             dp_control.enable()
-        for i, (inputs, labels) in enumerate(trainloader, 0):
+        ############################################
+        # Loop over batchs update weights
+        ############################################
+        for i, (inputs, labels) in enumerate(trainloader, 0):# Loop over batchs
             # get the inputs
-            if not args.final: net.set_individual(ga.sample_child())
+            # sample child from population
+            if not args.final:
+                net.set_individual(ga.sample_child())
 
             inputs = inputs.to(working_device)
             labels = labels.to(working_device)
@@ -159,7 +165,9 @@ if model_type == ModelType.CNN:
 
             # print statistics
             running_loss += loss.item()
-
+        ############################################
+        # Update GA population
+        ############################################
         if args.final:
             f_max = evaluate_single(ind, net, testloader, working_device)
             n_diff = 0
@@ -171,11 +179,12 @@ if model_type == ModelType.CNN:
                 _, _, f_max, _, n_diff = ga.update_population()
                 best_individual = ga.best_individual
             else:
+
                 f_max = 0
                 n_diff = 0
                 for _ in range(config.get('generation_per_epoch')):
-                    evaluate_individual_list(ga.get_current_generation(), ga, net, testloader, working_device)
-                    _, _, v_max, _, n_d = ga.update_population()
+                    evaluate_individual_list(ga.get_current_generation(), ga, net, testloader, working_device) # evaluate next generation on the validation set
+                    _, _, v_max, _, n_d = ga.update_population() # replacement
                     n_diff += n_d
                     if v_max > f_max:
                         f_max = v_max
@@ -216,29 +225,34 @@ elif model_type == ModelType.RNN:
         eval_batch_size = config.get('batch_size_val')
         train_loss = train_genetic_rnn(ga, trainloader, net, optimizer, criterion, ntokens, config.get('batch_size'),
                                        config.get('bptt'), config.get('clip'),
-                                       log_interval)
-
-        val_loss, loss_var, max_loss, min_loss, n_diff = rnn_genetic_evaluate(ga, net, criterion, testloader, ntokens,
-                                                                              config.get('batch_size_val'),
-                                                                              config.get('bptt'))
+                                       log_interval, args.final)
+        if args.final:
+            min_loss = rnn_evaluate(net, criterion, testloader, ntokens, config.get('batch_size_val'),
+                                    config.get('bptt'))
+        else:
+            val_loss, loss_var, max_loss, min_loss, n_diff = rnn_genetic_evaluate(ga, net, criterion, testloader,
+                                                                                  ntokens,
+                                                                                  config.get('batch_size_val'),
+                                                                                  config.get('bptt'))
 
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | lr {:02.2f} |  '
               ''.format(epoch, (time.time() - epoch_start_time),
-                        val_loss, scheduler.get_lr()[-1]))
+                        min_loss, scheduler.get_lr()[-1]))
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
-        if val_loss < best:
+        if min_loss < best:
+            print("Update Best")
             torch.save(net.state_dict(), os.path.join(log_dir, 'best_model.pt'))
             if not args.final:
                 gnas.draw_network(ss, ga.best_individual, os.path.join(log_dir, 'best_graph_' + str(epoch) + '_'))
                 pickle.dump(ga.best_individual, open(os.path.join(log_dir, 'best_individual.pickle'), "wb"))
 
-            best = val_loss
+            best = min_loss
 
         ra.add_epoch_result('Loss', train_loss)
         ra.add_epoch_result('LR', scheduler.get_lr()[-1])
-        ra.add_epoch_result('Best',best)
-        ra.add_result('Fitness', ga.ga_result.fitness_list)
+        ra.add_epoch_result('Best', best)
+        if not args.final: ra.add_result('Fitness', ga.ga_result.fitness_list)
         ra.save_result(log_dir)
 print('Finished Training')

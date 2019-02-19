@@ -5,8 +5,8 @@ from torch.nn.parameter import Parameter
 from gnas.search_space.individual import Individual
 from gnas.modules.sub_graph_module import SubGraphModule
 from torch.nn import functional as F
-from gnas.modules.cnn.se_block import SEBlock
-from gnas.modules.identity import Identity
+from modules.se_block import SEBlock
+from modules.identity import Identity
 
 
 class CnnSearchModule(nn.Module):

@@ -1,7 +1,5 @@
 import numpy as np
 from gnas.search_space.individual import Individual, MultipleBlockIndividual
-from gnas.genetic_algorithm.cross_over import uniform_crossover, select_crossover
-
 
 def _individual_uniform_crossover(individual_a: Individual, individual_b: Individual):
     n = individual_a.get_length()

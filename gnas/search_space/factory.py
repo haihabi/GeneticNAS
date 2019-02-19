@@ -3,6 +3,8 @@ from gnas.search_space.search_space import SearchSpace
 from gnas.search_space.operation_space import CnnNodeConfig, RnnNodeConfig, RnnInputNodeConfig
 from enum import Enum
 
+CNN_OP = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
+
 
 class SearchSpaceType(Enum):
     CNNSingleCell = 0
@@ -11,20 +13,20 @@ class SearchSpaceType(Enum):
 
 
 def _two_input_cell(n_nodes, drop_path_control):
-    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
-    node_config_list = [CnnNodeConfig(2, [0, 1], op, drop_path_control=drop_path_control)]
+    node_config_list = [CnnNodeConfig(2, [0, 1], CNN_OP, drop_path_control=drop_path_control)]
     for i in range(n_nodes - 1):
         node_config_list.append(
-            CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), op, drop_path_control=drop_path_control))
+            CnnNodeConfig(3 + i, np.linspace(0, 2 + i, 3 + i).astype('int'), CNN_OP,
+                          drop_path_control=drop_path_control))
     return node_config_list
 
 
 def _one_input_cell(n_nodes, drop_path_control):
-    op = ['Dw3x3', 'Identity', 'Dw5x5', 'Avg3x3', 'Max3x3']
-    node_config_list = [CnnNodeConfig(1, [0], op, drop_path_control=drop_path_control)]
+    node_config_list = [CnnNodeConfig(1, [0], CNN_OP, drop_path_control=drop_path_control)]
     for i in range(n_nodes - 1):
         node_config_list.append(
-            CnnNodeConfig(2 + i, np.linspace(0, 1 + i, 2 + i).astype('int'), op, drop_path_control=drop_path_control))
+            CnnNodeConfig(2 + i, np.linspace(0, 1 + i, 2 + i).astype('int'), CNN_OP,
+                          drop_path_control=drop_path_control))
     return node_config_list
 
 

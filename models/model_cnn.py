@@ -80,18 +80,26 @@ class Net(nn.Module):
 
     def forward(self, x):
         x_prev = self.bn1(self.conv1(x))
+
         x, x_prev = self.block_1(x_prev, x_prev)
 
+        # reduce dim
         x = self.bn2(self.conv2(self.avg(x)))
         x_prev = self.bn2_prev(self.conv2_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_2(self.block_2_reduce(x, x_prev), x)
+
+
         if self.aux: x2 = torch.mean(torch.mean(x, dim=-1), dim=-1)
+
+
         x = self.bn3(self.conv3(self.avg(x)))
         x_prev = self.bn3_prev(self.conv3_prev(self.avg(x_prev)))
 
         x, x_prev = self.block_3(self.block_3_reduce(x, x_prev), x)
 
+
+        # Global pooling
         x = torch.mean(torch.mean(x, dim=-1), dim=-1)
         if self.aux:
             return [self.fc1(self.dp(x)), self.fc2(self.dp(x2))]

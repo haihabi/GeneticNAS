@@ -106,21 +106,22 @@ class GeneticAlgorithms(object):
         f_min = np.min(generation_fitness)
         total_dict = self.max_dict.copy()
         total_dict.update(self.current_dict)
-        last_dict = None
-        if self.keep_size > 0:
-            last_dict = total_dict.filter_last_n(self.keep_size)
-        if self.population_size - self.keep_size > 0:
+        # last_dict = None
+        # if self.keep_size > 0:
+        #     last_dict = total_dict.filter_last_n(self.keep_size)
+        # if self.population_size - self.keep_size > 0:
 
-            best_max_dict = total_dict.filter_top_n(self.population_size - self.keep_size,
-                                                    min_max=not self.min_objective)
-
-            if self.keep_size > 0:
-                best_max_dict = best_max_dict.merge(last_dict)
-        else:
-            best_max_dict = last_dict
-
+        best_max_dict = total_dict.filter_top_n(self.population_size,min_max=not self.min_objective)
         n_diff = self.max_dict.get_n_diff(best_max_dict)
         self.max_dict = best_max_dict
+        #
+        #     if self.keep_size > 0:
+        #         best_max_dict = best_max_dict.merge(last_dict)
+        # else:
+        #     best_max_dict = last_dict
+
+
+
 
         self.current_dict = dict()
         population_fitness = np.asarray(list(self.max_dict.values())).flatten()
@@ -149,9 +150,9 @@ class GeneticAlgorithms(object):
         self.current_dict.update({individual: individual_fitness})
 
     def sample_child(self):
-        if len(list(self.max_dict.keys())) == 0:
+        if len(list(self.max_dict.keys())) == 0: # if not population exist generate random indivaul
             return self.population_initializer(1)[0]
         else:
-            couples = choices(list(self.max_dict.keys()), k=2)
-            child = self.cross_over_function(couples[0], couples[1])
-            return self.mutation_function(child[0])
+            couples = choices(list(self.max_dict.keys()), k=2) # random select two indivuals from population
+            child = self.cross_over_function(couples[0], couples[1]) # prefome cross over
+            return self.mutation_function(child[0]) # select the first then mutation

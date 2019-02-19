@@ -13,24 +13,25 @@ class SubGraphModule(nn.Module):
         self.config_dict = config_dict
         self.individual_index = individual_index
         if self.ss.single_block:
-            self.node_modules = [get_module(oc, config_dict)for oc in self.ss.ocl]
+            self.block_modules = [get_module(oc, config_dict) for oc in self.ss.ocl]
         else:
-            self.node_modules = [get_module(oc, config_dict)for oc in
-                                 self.ss.ocl[individual_index]]
-        # print(len(self.node_modules))
-        [self.add_module('Node' + str(i), n) for i, n in enumerate(self.node_modules)]
+            self.block_modules = [get_module(oc, config_dict) for oc in
+                                  self.ss.ocl[individual_index]]
+        #
+        [self.add_module('Node' + str(i), n) for i, n in enumerate(self.block_modules)]
 
     def forward(self, *input_list):
+        # input list at start is h_n and h_(n-1)
         net = list(input_list)
-        for nm in self.node_modules:
-            net.append(nm(net))
-        return net
+        for nm in self.block_modules: # loop over all blocks
+            net.append(nm(net)) # call each block in the sub graph
+        return net # output list of all block in the sub graph
 
     def set_individual(self, individual: Individual):
         if not self.ss.single_block:
             individual = individual.get_individual(self.individual_index)
         si_list = []
-        for nc, nm in zip(individual.generate_node_config(), self.node_modules):
+        for nc, nm in zip(individual.generate_node_config(), self.block_modules):
             nm.set_current_node_config(nc)
             if nm.__dict__.get('select_index') is not None:
                 si_list.append(nm.select_index)

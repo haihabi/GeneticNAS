@@ -1,5 +1,5 @@
 from torch import nn
-from gnas.modules.identity import Identity
+from modules.identity import Identity
 
 __nl_dict__ = {'Tanh': nn.Tanh,
                'ReLU': nn.ReLU6,

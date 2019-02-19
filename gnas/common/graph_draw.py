@@ -32,8 +32,7 @@ def add_node(graph, node_id, label, shape='box', style='filled'):
 
 def _draw_individual(ocl, individual, path):
     import pygraphviz as pgv
-    graph = pgv.AGraph(directed=True, strict=True,
-                       fontname='Helvetica', arrowtype='open')  # not work?
+    graph = pgv.AGraph(directed=True,layout='dot')  # not work?
 
     ofset = len(ocl[0].inputs)
     for i in range(len(ocl[0].inputs)):
@@ -56,6 +55,9 @@ def _draw_individual(ocl, individual, path):
             add_node(graph, (i + ofset), 'Add')
             graph.add_edge((i + ofset) * 10, (i + ofset))
             graph.add_edge((i + ofset) * 10 + 1, (i + ofset))
+            c=graph.add_subgraph([(i + ofset) * 10,(i + ofset) * 10+1,(i + ofset)],name='cluster_block:'+str(i),label='Block '+str(i))
+            # c.attr(label='block:'+str(i))
+
         elif isinstance(op, RnnInputNodeConfig):
             op_type = op.non_linear_list[oc]
             add_node(graph, (i + ofset), op_type)

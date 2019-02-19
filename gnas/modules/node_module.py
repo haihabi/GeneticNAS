@@ -1,7 +1,7 @@
 import torch.nn as nn
 from gnas.modules.module_generator import generate_non_linear, generate_op
-from gnas.modules.rnn.weight_drop import WeightDrop
-from gnas.modules.drop_path import DropPath
+from modules.weight_drop import WeightDrop
+from modules.drop_path import DropPath
 
 class RnnInputNodeModule(nn.Module):
     def __init__(self, node_config, config_dict):
@@ -44,14 +44,14 @@ class RnnNodeModule(nn.Module):
 
         self.n_channels = config_dict.get('n_channels')
         self.nl_module = generate_non_linear(self.nc.non_linear_list)
-        self.bn = nn.BatchNorm1d(self.n_channels)
+        # self.bn = nn.BatchNorm1d(self.n_channels)
 
         self.x_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('c_linear' + str(i), m) for i, m in enumerate(self.x_linear_list)]
         self.h_linear_list = [nn.Linear(self.n_channels, self.n_channels) for _ in range(node_config.get_n_inputs())]
         [self.add_module('h_linear' + str(i), m) for i, m in enumerate(self.h_linear_list)]
         self.sigmoid = nn.Sigmoid()
-        self.bn = nn.BatchNorm1d(self.n_channels)
+        # self.bn = nn.BatchNorm1d(self.n_channels)
         self.non_linear = None
         self.node_config = None
 
@@ -87,7 +87,6 @@ class ConvNodeModule(nn.Module):
         self.cc = None
         self.op_a = None
         self.op_b = None
-        self.relu = nn.ReLU()
 
     def forward(self, inputs):
         net_a = inputs[self.input_a]
