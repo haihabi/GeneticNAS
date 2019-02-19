@@ -3,8 +3,7 @@ import torch.nn as nn
 import numpy as np
 from gnas.search_space.individual import Individual
 from gnas.modules.operation_factory import get_module
-from cnn_utils import DropPath
-
+# from modules.drop_path import DropPath
 
 class SubGraphModule(nn.Module):
     def __init__(self, search_space, config_dict, individual_index=0):

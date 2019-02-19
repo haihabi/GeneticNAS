@@ -99,28 +99,28 @@ class TestSearchSpace(unittest.TestCase):
     def test_plot_individual_rnn(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_rnn_search_space(12)
+        ss = gnas.get_gnas_rnn_search_space(12)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     def test_plot_individual(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNSingleCell)
+        ss = gnas.get_gnas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNSingleCell)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     def test_plot_individual_dual(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNDualCell)
+        ss = gnas.get_gnas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNDualCell)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 
     def test_plot_individual_triple(self):
         current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-        ss = gnas.get_enas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNTripleCell)
+        ss = gnas.get_gnas_cnn_search_space(5, 1, gnas.SearchSpaceType.CNNTripleCell)
         ind = ss.generate_individual()
         draw_network(ss, ind, os.path.join(current_path, 'graph'))
 

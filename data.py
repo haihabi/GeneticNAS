@@ -2,7 +2,7 @@ import os
 import torch
 import torchvision
 import torchvision.transforms as transforms
-from cnn_utils import Cutout
+from modules.cut_out import Cutout
 
 
 def get_dataset(config):

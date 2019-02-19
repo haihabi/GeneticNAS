@@ -9,11 +9,13 @@ import argparse
 
 import gnas
 from models import model_cnn, model_rnn
-from cnn_utils import CosineAnnealingLR, evaluate_single, evaluate_individual_list
+from cnn_utils import evaluate_single, evaluate_individual_list
 from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate, rnn_evaluate
 from data import get_dataset
 from common import load_final, make_log_dir, get_model_type, ModelType
 from config import get_config, load_config, save_config
+from modules.drop_path import DropPathControl
+from modules.cosine_annealing import CosineAnnealingLR
 
 #######################################
 # Constants
@@ -59,8 +61,8 @@ trainloader, testloader, n_param = get_dataset(config)
 if model_type == ModelType.CNN:
     min_objective = False
     n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
-    dp_control = gnas.DropPathControl(config.get('drop_path_keep_prob'))
-    ss = gnas.get_enas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
+    dp_control = DropPathControl(config.get('drop_path_keep_prob'))
+    ss = gnas.get_gnas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
 
     net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), n_param,
                         config.get('dropout'),
@@ -74,7 +76,7 @@ if model_type == ModelType.CNN:
 elif model_type == ModelType.RNN:
     min_objective = True
     ntokens = n_param
-    ss = gnas.get_enas_rnn_search_space(config.get('n_nodes'))
+    ss = gnas.get_gnas_rnn_search_space(config.get('n_nodes'))
     net = model_rnn.RNNModel(ntokens, config.get('n_channels'), config.get('n_channels'), config.get('n_blocks'),
                              config.get('dropout'),
                              tie_weights=True,
@@ -141,7 +143,7 @@ if model_type == ModelType.CNN:
         ############################################
         # Loop over batchs update weights
         ############################################
-        for i, (inputs, labels) in enumerate(trainloader, 0):# Loop over batchs
+        for i, (inputs, labels) in enumerate(trainloader, 0):  # Loop over batchs
             # get the inputs
             # sample child from population
             if not args.final:
@@ -183,8 +185,9 @@ if model_type == ModelType.CNN:
                 f_max = 0
                 n_diff = 0
                 for _ in range(config.get('generation_per_epoch')):
-                    evaluate_individual_list(ga.get_current_generation(), ga, net, testloader, working_device) # evaluate next generation on the validation set
-                    _, _, v_max, _, n_d = ga.update_population() # replacement
+                    evaluate_individual_list(ga.get_current_generation(), ga, net, testloader,
+                                             working_device)  # evaluate next generation on the validation set
+                    _, _, v_max, _, n_d = ga.update_population()  # replacement
                     n_diff += n_d
                     if v_max > f_max:
                         f_max = v_max

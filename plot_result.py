@@ -33,7 +33,7 @@ file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00",
 # # Plot CIFAR10
 # file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00"]
 # # Plot CIFAR100
-file_list = ["/data/projects/GNAS/logs/2019_02_17_20_25_42","/data/projects/GNAS/logs/2019_02_08_07_05_08"]
+file_list = ["/data/projects/GNAS/logs/2019_02_17_20_25_42","/data/projects/GNAS/logs/2019_02_08_07_05_08","/data/projects/GNAS/logs/2019_02_19_06_57_19"]
 def read_config(file_path):
     pass
 

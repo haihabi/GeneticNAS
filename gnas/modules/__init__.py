@@ -1,2 +1,2 @@
-from gnas.modules.rnn.rnn_module import RnnSearchModule
-from gnas.modules.cnn.cnn_module import CnnSearchModule
+from gnas.modules.rnn_layer import RnnSearchModule
+from gnas.modules.cnn_block import CnnSearchModule
