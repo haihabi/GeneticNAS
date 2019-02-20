@@ -2,7 +2,12 @@ import os
 import pickle
 import numpy as np
 from matplotlib import pyplot as plt
-from config import load_config
+from common import load_final, make_log_dir, get_model_type, ModelType
+from config import get_config, load_config, save_config
+import gnas
+from modules.drop_path import DropPathControl
+from gnas.common.graph_draw import draw_cell, draw_network
+import matplotlib.image as mpimg
 
 # Popultation size compare
 file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00",
@@ -30,13 +35,40 @@ file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00",
 file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00",
              "/data/projects/GNAS/logs/2019_02_11_06_15_10"]
 #
-# # Plot CIFAR10
-# file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00"]
-# # Plot CIFAR100
-file_list = ["/data/projects/GNAS/logs/2019_02_17_20_25_42","/data/projects/GNAS/logs/2019_02_08_07_05_08","/data/projects/GNAS/logs/2019_02_19_06_57_19"]
-def read_config(file_path):
-    pass
+# # Plot CIFAR10 - Search Result
+file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00"]
+# # Plot CIFAR100 - Search Result
+file_list = ["/data/projects/GNAS/logs/2019_02_17_20_25_42"]
 
+
+
+
+plot_arc = False
+# file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00", ]
+if plot_arc:
+    ind_file = os.path.join(file_list[0], 'best_individual.pickle')
+    config_file = os.path.join(file_list[0], 'config.json')
+    ind = pickle.load(open(ind_file, "rb"))
+
+    config = get_config(ModelType.CNN)
+    print("Loading config file:" + config_file)
+    config.update(load_config(config_file))
+
+    dp_control = DropPathControl(config.get('drop_path_keep_prob'))
+    n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
+    ss = gnas.get_gnas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
+    draw_network(ss, ind, './')
+    title_list = ['Reduce Cell', ' Normal Cell', ' Input Cell']
+    for i in range(len(ss.ocl)):
+        plt.subplot(1, len(ss.ocl), i + 1)
+        img = mpimg.imread(os.path.join('./', str(i) + '.png'))
+        plt.imshow(img)
+        plt.axis('off')
+        plt.title(title_list[i])
+    plt.show()
+    # draw_cell(ss.ocl[0], ind.individual_list[0])
+    # plt.show()
+    # print("a")
 
 if len(file_list) == 1:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
@@ -46,6 +78,16 @@ if len(file_list) == 1:
     fitness_p = fitness_p[0:-1:2, :]
 
     epochs = np.linspace(0, fitness_p.shape[0] - 1, fitness_p.shape[0])
+    plt.plot(epochs, np.mean(fitness_p, axis=1),'*--',
+                 label='Population mean accuracy')
+    plt.plot(epochs, np.max(fitness_p, axis=1), label='Max accuracy')
+    plt.plot(np.asarray(data.result_dict.get('Best')), '--', label='Best')
+    plt.grid()
+    plt.legend()
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.show()
+
 
     plt.errorbar(epochs, np.mean(fitness_p, axis=1), np.std(fitness_p, axis=1), fmt='*--',
                  label='Population mean accuracy')
