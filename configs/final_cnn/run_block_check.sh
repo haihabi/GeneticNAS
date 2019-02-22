@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-nc run -C GPU9 python /data/projects/swat/users/haih/GNAS/main.py --final 1 --dataset_name CIFAR10 --search_dir /data/projects/swat/users/haih/GNAS/logs/2019_01_24_19_06_00 --config_file /data/projects/swat/users/haih/GNAS/configs/final_cnn/config_final_0_6.json
-nc run -C GPU9 python /data/projects/swat/users/haih/GNAS/main.py --final 1 --dataset_name CIFAR10 --search_dir /data/projects/swat/users/haih/GNAS/logs/2019_01_24_19_06_00 --config_file /data/projects/swat/users/haih/GNAS/configs/final_cnn/config_final_0_8.json
-nc run -C GPU9 python /data/projects/swat/users/haih/GNAS/main.py --final 1 --dataset_name CIFAR10 --search_dir /data/projects/swat/users/haih/GNAS/logs/2019_01_24_19_06_00 --config_file /data/projects/swat/users/haih/GNAS/configs/final_cnn/config_final_0_9.json
