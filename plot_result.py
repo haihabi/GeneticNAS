@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from common import load_final, make_log_dir, get_model_type, ModelType
 from config import get_config, load_config, save_config
 import gnas
-from modules.drop_path import DropPathControl
+from modules.drop_module import DropModuleControl
 from gnas.common.graph_draw import draw_cell, draw_network
 import matplotlib.image as mpimg
 
@@ -40,7 +40,12 @@ file_list = ["/data/projects/gnas_results/p_mutation/2019_01_24_19_06_00"]
 # # Plot CIFAR100 - Search Result
 file_list = ["/data/projects/GNAS/logs/2019_02_17_20_25_42"]
 
-
+# CIFAR10 Final
+file_list = ['/data/projects/gnas_results/new_log/2019_02_09_16_43_02']
+# file_list=['/data/projects/gnas_results/new_log/2019_02_07_18_34_45',
+#            '/data/projects/gnas_results/new_log/2019_02_09_02_23_52',
+#            '/data/projects/gnas_results/new_log/2019_02_09_16_43_02',
+#            '/data/projects/gnas_results/new_log/2019_02_14_18_15_48']
 
 
 plot_arc = False
@@ -54,7 +59,7 @@ if plot_arc:
     print("Loading config file:" + config_file)
     config.update(load_config(config_file))
 
-    dp_control = DropPathControl(config.get('drop_path_keep_prob'))
+    dp_control = DropModuleControl(config.get('drop_path_keep_prob'))
     n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
     ss = gnas.get_gnas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
     draw_network(ss, ind, './')
@@ -70,59 +75,67 @@ if plot_arc:
     # plt.show()
     # print("a")
 
-if len(file_list) == 1:
+if len(file_list) == 1 and True:
     data = pickle.load(open(os.path.join(file_list[0], 'ga_result.pickle'), "rb"))
     config = load_config(os.path.join(file_list[0], 'config.json'))
-    fitness = np.stack(data.result_dict.get('Fitness'))
-    fitness_p = np.stack(data.result_dict.get('Fitness-Population'))
-    fitness_p = fitness_p[0:-1:2, :]
+    if data.result_dict.get('Fitness') is None:
+        plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Training Accuracy')
+        plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), label='Validation Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend()
+        plt.ylabel('Accuracy[%]')
+        plt.grid()
+        plt.show()
+    else:
+        fitness = np.stack(data.result_dict.get('Fitness'))
+        fitness_p = np.stack(data.result_dict.get('Fitness-Population'))
+        fitness_p = fitness_p[0:-1:2, :]
 
-    epochs = np.linspace(0, fitness_p.shape[0] - 1, fitness_p.shape[0])
-    plt.plot(epochs, np.mean(fitness_p, axis=1),'*--',
+        epochs = np.linspace(0, fitness_p.shape[0] - 1, fitness_p.shape[0])
+        plt.plot(epochs, np.mean(fitness_p, axis=1), '*--',
                  label='Population mean accuracy')
-    plt.plot(epochs, np.max(fitness_p, axis=1), label='Max accuracy')
-    plt.plot(np.asarray(data.result_dict.get('Best')), '--', label='Best')
-    plt.grid()
-    plt.legend()
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.show()
+        plt.plot(epochs, np.max(fitness_p, axis=1), label='Max accuracy')
+        plt.plot(np.asarray(data.result_dict.get('Best')), '--', label='Best')
+        plt.grid()
+        plt.legend()
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.show()
 
+        plt.errorbar(epochs, np.mean(fitness_p, axis=1), np.std(fitness_p, axis=1), fmt='*--',
+                     label='Population mean accuracy')
+        plt.plot(epochs, np.min(fitness_p, axis=1), label='Min accuracy')
+        plt.plot(epochs, np.max(fitness_p, axis=1), label='Max accuracy')
+        plt.grid()
+        plt.legend()
+        plt.title('Population accuracy on the validation set')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.show()
 
-    plt.errorbar(epochs, np.mean(fitness_p, axis=1), np.std(fitness_p, axis=1), fmt='*--',
-                 label='Population mean accuracy')
-    plt.plot(epochs, np.min(fitness_p, axis=1), label='Min accuracy')
-    plt.plot(epochs, np.max(fitness_p, axis=1), label='Max accuracy')
-    plt.grid()
-    plt.legend()
-    plt.title('Population accuracy on the validation set')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.show()
+        plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Training')
+        plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '--', label='Validation')
+        plt.plot(np.asarray(data.result_dict.get('Best')), '*-', label='Best')
+        plt.title('Training vs Validation Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend()
+        plt.ylabel('Accuracy[%]')
+        plt.grid()
+        plt.show()
 
-    plt.plot(np.asarray(data.result_dict.get('Training Accuracy')), label='Training')
-    plt.plot(np.asarray(data.result_dict.get('Validation Accuracy')), '--', label='Validation')
-    plt.plot(np.asarray(data.result_dict.get('Best')), '*-', label='Best')
-    plt.title('Training vs Validation Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend()
-    plt.ylabel('Accuracy[%]')
-    plt.grid()
-    plt.show()
+        plt.plot(epochs, data.result_dict.get('N'))
+        plt.title('Number of new individuals in Population')
+        plt.xlabel('Epoch')
+        plt.ylabel('N')
+        plt.grid()
+        plt.show()
 
-    plt.plot(epochs, data.result_dict.get('N'))
-    plt.title('Number of new individuals in Population')
-    plt.xlabel('Epoch')
-    plt.ylabel('N')
-    plt.grid()
-    plt.show()
-
-    plt.plot(epochs, data.result_dict.get('Training Loss'))
-    plt.title('Training Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.grid()
-    plt.show()
+        plt.plot(epochs, data.result_dict.get('Training Loss'))
+        plt.title('Training Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.grid()
+        plt.show()
 
 else:
     ################

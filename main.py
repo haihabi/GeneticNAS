@@ -14,7 +14,7 @@ from rnn_utils import train_genetic_rnn, rnn_genetic_evaluate, rnn_evaluate
 from data import get_dataset
 from common import load_final, make_log_dir, get_model_type, ModelType
 from config import get_config, load_config, save_config
-from modules.drop_path import DropPathControl
+from modules.drop_module import DropModuleControl
 from modules.cosine_annealing import CosineAnnealingLR
 
 #######################################
@@ -61,7 +61,7 @@ trainloader, testloader, n_param = get_dataset(config)
 if model_type == ModelType.CNN:
     min_objective = False
     n_cell_type = gnas.SearchSpaceType(config.get('n_block_type') - 1)
-    dp_control = DropPathControl(config.get('drop_path_keep_prob'))
+    dp_control = DropModuleControl(config.get('drop_path_keep_prob'))
     ss = gnas.get_gnas_cnn_search_space(config.get('n_nodes'), dp_control, n_cell_type)
 
     net = model_cnn.Net(config.get('n_blocks'), config.get('n_channels'), n_param,

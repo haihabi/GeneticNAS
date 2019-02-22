@@ -2,6 +2,11 @@ import math
 import torch.optim as optim
 
 
+# copy from:https://github.com/pytorch/pytorch/blob/master/torch/optim/lr_scheduler.py
+# The modification list:
+# 1. add T_mul to the init function
+# 2. change forward function to multiply the LR.
+
 class CosineAnnealingLR(optim.lr_scheduler._LRScheduler):
     r"""Set the learning rate of each parameter group using a cosine annealing
     schedule, where :math:`\eta_{max}` is set to the initial lr and

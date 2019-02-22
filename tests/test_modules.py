@@ -4,7 +4,7 @@ import gnas
 import time
 from tests.common4testing import generate_ss, generate_ss_cnn
 from gnas.modules.sub_graph_module import SubGraphModule
-from modules.drop_path import DropPathControl
+from modules.drop_module import DropModuleControl
 
 class TestModules(unittest.TestCase):
     def test_sub_graph_build_rnn(self):
@@ -39,7 +39,7 @@ class TestModules(unittest.TestCase):
         channels = 64
         input = torch.randn(batch_size, channels, h, w, dtype=torch.float)
         input_b = torch.randn(batch_size, channels, h, w, dtype=torch.float)
-        dp_control = DropPathControl(1)
+        dp_control = DropModuleControl(1)
         ss = gnas.get_gnas_cnn_search_space(4, dp_control, gnas.SearchSpaceType.CNNSingleCell)
         rnn = gnas.modules.CnnSearchModule(n_channels=channels,
                                            ss=ss)

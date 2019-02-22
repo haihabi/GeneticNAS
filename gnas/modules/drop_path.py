@@ -1,1 +1,1 @@
-from modules.drop_path import DropPath,DropPathControl
+from modules.drop_module import DropModule, DropModuleControl

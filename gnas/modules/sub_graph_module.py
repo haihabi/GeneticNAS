@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from gnas.search_space.individual import Individual
 from gnas.modules.operation_factory import get_module
-# from modules.drop_path import DropPath
+
 
 class SubGraphModule(nn.Module):
     def __init__(self, search_space, config_dict, individual_index=0):
@@ -22,9 +22,9 @@ class SubGraphModule(nn.Module):
     def forward(self, *input_list):
         # input list at start is h_n and h_(n-1)
         net = list(input_list)
-        for nm in self.block_modules: # loop over all blocks
-            net.append(nm(net)) # call each block in the sub graph
-        return net # output list of all block in the sub graph
+        for nm in self.block_modules:  # loop over all blocks
+            net.append(nm(net))  # call each block in the sub graph
+        return net  # output list of all block in the sub graph
 
     def set_individual(self, individual: Individual):
         if not self.ss.single_block:
