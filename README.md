@@ -38,7 +38,6 @@ In this section provide exmaple of how to run architecture search on there datas
 
 # Result
 
-
 ## CIFAR10 Counvulation Cell 
 ![Screenshot](images/search_result_cifar10.png)
 
@@ -50,4 +49,4 @@ In this section provide exmaple of how to run architecture search on there datas
 | Dataset | Accuracy[%] |
 | --- | --- |
 | CIFAR10 | 96% |
-| CIFAR100 | 80! |
+| CIFAR100 | 80.1 |
