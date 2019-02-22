@@ -18,22 +18,22 @@ The first is install all the flowing prerequisites using conda:
 In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100 
 #### CIFAR 10
 ```javascript
-    python main.py --dataset_name CIFAR10
+    python main.py --dataset_name CIFAR10 --config_file ./config/config_cnn_search_cifar10.json
 ```
 #### CIFAR 100
 ```javascript
-    python main.py --dataset_name CIFAR100
+    python main.py --dataset_name CIFAR100 --config_file ./config/config_cnn_search_cifar100.json
 ```
 
 # Examples Run Final Training
-In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100 
+In this section provide exmaple of how to run final training search on there dataset CIFAR10 and CIFAR100 
 #### CIFAR 10
 ```javascript
-    python main.py --dataset_name CIFAR10 --final 1 --serach_dir $LOG_DIR
+    python main.py --dataset_name CIFAR10 --final 1 --serach_dir $LOG_DIR --config_file ./config/config_cnn_final_cifar10.json
 ```
 #### CIFAR 100
 ```javascript
-    python main.py --dataset_name CIFAR100 --final 1 --serach_dir $LOG_DIR
+    python main.py --dataset_name CIFAR100 --final 1 --serach_dir $LOG_DIR --config_file ./config/config_cnn_final_cifar10.json
 ```
 
 # Result
@@ -49,4 +49,4 @@ In this section provide exmaple of how to run architecture search on there datas
 | Dataset | Accuracy[%] |
 | --- | --- |
 | CIFAR10 | 96% |
-| CIFAR100 | 80.1 |
+| CIFAR100 | 80.1% |
