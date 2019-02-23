@@ -7,12 +7,18 @@ Includes code for CIFAR-10 and CIFAR-100 image classification
 The first is install all the flowing prerequisites using conda:
 * pytorch
 * graphviz
-* install the requirements file
+* pygraphviz
+* numpy
 
 ```javascript
     conda install graphviz
     conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
-    pip install -r requirements.txt
+    conda install pygraphviz
+    conda install numpy
+```
+or using the requirements file
+```javascript
+    conda install --file requirements.txt
 ```
 # Examples Run Search
 In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100 
