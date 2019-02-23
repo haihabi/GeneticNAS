@@ -18,7 +18,7 @@ The first is install all the flowing prerequisites using conda:
 ```
 
 # Examples Run Search
-In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100 
+In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100, at the end of search a log folder is create under the current folder
 #### CIFAR 10
 ```javascript
     python main.py --dataset_name CIFAR10 --config_file ./configs/config_cnn_search_cifar10.json
