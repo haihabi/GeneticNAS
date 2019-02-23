@@ -16,10 +16,7 @@ The first is install all the flowing prerequisites using conda:
     conda install pygraphviz
     conda install numpy
 ```
-or using the requirements file
-```javascript
-    conda install --file requirements.txt
-```
+
 # Examples Run Search
 In this section provide exmaple of how to run architecture search on there dataset CIFAR10 and CIFAR100 
 #### CIFAR 10
