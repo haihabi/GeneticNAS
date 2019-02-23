@@ -1,6 +1,0 @@
-graphviz
-numpy
-pygraphviz
-pytorch
-torchvision
-cudatoolkit=9.0
