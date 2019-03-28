@@ -1,5 +1,5 @@
-# Genetic Neural Architecture Search (GNAS) 
-The genetic neural architecture search (GNAS) is a neural architecture search method that is based on genetic algorithm which utilized weight sharing accross all candidate network.
+# Genetic Neural Architecture Search (GeneticNAS) 
+The genetic neural architecture search (GeneticNAS) is a neural architecture search method that is based on genetic algorithm which utilized weight sharing accross all candidate network.
 
 Includes code for CIFAR-10 and CIFAR-100 image classification 
  
