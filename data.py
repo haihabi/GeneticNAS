@@ -23,7 +23,7 @@ def get_dataset(config):
                                                                                                       device), len(
             corpus.dictionary)
     else:
-        raise Exception('unkown dataset type')
+        raise Exception('unknown dataset type')
 
 
 def get_cifar(config, data_path, dataset_name='CIFAR10'):
@@ -64,7 +64,7 @@ def get_cifar(config, data_path, dataset_name='CIFAR10'):
                                                  shuffle=False, num_workers=4)
         n_class = 100
     else:
-        raise Exception('unkown dataset' + dataset_name)
+        raise Exception('unknown dataset' + dataset_name)
 
     return trainloader, testloader, n_class
 
